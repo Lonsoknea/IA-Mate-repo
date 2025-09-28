@@ -1,19 +1,27 @@
 {
-  "name": "Root",
+  "name": "Start",
+  "type": "action",
   "children": [
     {
-      "name": "Branch 1",
-      "children": [
-        { "name": "Leaf 1" },
-        { "name": "Leaf 2" }
-      ]
+      "name": "Login",
+      "type": "action",
+      "label": "User initiates login"
     },
     {
-      "name": "Branch 2",
+      "name": "Credentials Valid?",
+      "type": "decision",
       "children": [
-        { "name": "Leaf 3" }
+        {
+          "name": "Dashboard",
+          "type": "action",
+          "label": "Yes"
+        },
+        {
+          "name": "Error Message",
+          "type": "action",
+          "label": "No"
+        }
       ]
-    },
-    { "name": "Leaf 4" }
+    }
   ]
 }
