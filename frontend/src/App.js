@@ -4,27 +4,23 @@ import * as d3 from 'd3';
 function App() {
   const [iaData, setIaData] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
-  const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [snapToGrid, setSnapToGrid] = useState(false);
   const [editingNodeId, setEditingNodeId] = useState(null);
   const [editingText, setEditingText] = useState('');
-  const [linkCreation, setLinkCreation] = useState({active: false, sourceId: null});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [width, setWidth] = useState(800);
   const [height, setHeight] = useState(600);
-  const [collapsedNodes, setCollapsedNodes] = useState(new Set());
+  const [selectedNodeName, setSelectedNodeName] = useState(null);
   const svgRef = useRef();
   const zoomRef = useRef();
   const gRef = useRef();
-  const simulationRef = useRef();
 
-  const colors = useMemo(() => ['#dbeafe', '#dcfce7', '#f3e8ff', '#fef3c7', '#f0f9ff'], []); // Pastel colors for levels
+  const colors = useMemo(() => ['#f8fafc', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'], []);
 
-  const hierarchyToGraph = useCallback((data, collapsed) => {
+  const hierarchyToGraph = useCallback((data) => {
     const nodes = [];
     const links = [];
-    const nodeMap = new Map();
 
     // Use tree layout for initial positions to avoid random overlaps
     const treeLayout = d3.tree().size([height - 100, width - 200]);
@@ -45,13 +41,12 @@ function App() {
         fy: d.x + height / 2,
         hasChildren,
       });
-      nodeMap.set(d.data.name, id);
 
       if (parentId !== null) {
-        links.push({ source: parentId, target: id, label: d.data.label || '' });
+        links.push({ source: nodes[parentId], target: nodes[id], label: d.data.label || '' });
       }
 
-      if (d.children && !collapsed.has(parentId)) {
+      if (d.children) {
         d.children.forEach(child => traverse(child, id, depth + 1));
       }
     };
@@ -59,6 +54,36 @@ function App() {
     traverse(root);
     return { nodes, links };
   }, [width, height]);
+
+  // Define recursive functions using useCallback to avoid parsing issues
+  const addChildToNode = useCallback((root, parentName, newChild) => {
+    if (root.name === parentName) {
+      root.children = root.children || [];
+      root.children.push(newChild);
+      return root;
+    }
+    if (root.children) {
+      for (let i = 0; i < root.children.length; i++) {
+        const updated = addChildToNode(root.children[i], parentName, newChild);
+        if (updated) {
+          root.children[i] = updated;
+          return root;
+        }
+      }
+    }
+    return null;
+  }, []);
+
+  const removeNodeByName = useCallback((root, targetName) => {
+    if (root.name === targetName) {
+      return null; // Remove this node
+    }
+    if (root.children) {
+      root.children = root.children.map(child => removeNodeByName(child, targetName)).filter(Boolean);
+      return root;
+    }
+    return root;
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -107,9 +132,9 @@ function App() {
 
   useEffect(() => {
     if (iaData) {
-      setGraphData(hierarchyToGraph(iaData, collapsedNodes));
+      setGraphData(hierarchyToGraph(iaData));
     }
-  }, [iaData, hierarchyToGraph, collapsedNodes]);
+  }, [iaData, hierarchyToGraph]);
 
   const fetchData = async () => {
     try {
@@ -126,7 +151,6 @@ function App() {
       setError('Failed to fetch data.');
     }
   };
-
 
   const zoomIn = useCallback(() => {
     if (zoomRef.current) {
@@ -159,43 +183,33 @@ function App() {
     }
   }, []);
 
-  const toggleCollapse = useCallback((nodeId) => {
-    setCollapsedNodes(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(nodeId)) {
-        newSet.delete(nodeId);
-      } else {
-        newSet.add(nodeId);
-      }
-      return newSet;
-    });
-  }, []);
-
   const addNode = useCallback(() => {
-    const newId = graphData.nodes.length;
-    const newNode = {
-      id: newId,
-      name: `New Node ${newId}`,
-      x: width / 2 + Math.random() * 100 - 50,
-      y: height / 2 + Math.random() * 100 - 50,
-      depth: 0,
-      fx: null,
-      fy: null,
+    if (!selectedNodeName || !iaData) return;
+
+    const newChild = {
+      name: `New Node ${Date.now()}`,
+      type: 'action',
+      children: []
     };
-    const newLinks = [...graphData.links];
-    if (selectedNodeId !== null) {
-      newLinks.push({ source: selectedNodeId, target: newId });
-    }
-    setGraphData({ nodes: [...graphData.nodes, newNode], links: newLinks });
-  }, [graphData, selectedNodeId, width, height]);
+
+    const newIaData = JSON.parse(JSON.stringify(iaData)); // Deep copy
+    addChildToNode(newIaData, selectedNodeName, newChild);
+    setIaData(newIaData);
+    setSelectedNodeName(null);
+  }, [iaData, selectedNodeName, addChildToNode]);
 
   const deleteNode = useCallback(() => {
-    if (selectedNodeId === null) return;
-    const newNodes = graphData.nodes.filter(n => n.id !== selectedNodeId);
-    const newLinks = graphData.links.filter(l => l.source.id !== selectedNodeId && l.target.id !== selectedNodeId);
-    setGraphData({ nodes: newNodes, links: newLinks });
-    setSelectedNodeId(null);
-  }, [graphData, selectedNodeId]);
+    if (!selectedNodeName || !iaData) return;
+
+    const newIaData = JSON.parse(JSON.stringify(iaData)); // Deep copy
+    const updatedRoot = removeNodeByName(newIaData, selectedNodeName);
+    if (updatedRoot) {
+      setIaData(updatedRoot);
+    } else {
+      setIaData(null);
+    }
+    setSelectedNodeName(null);
+  }, [iaData, selectedNodeName, removeNodeByName]);
 
   const startEditing = useCallback((d) => {
     setEditingNodeId(d.id);
@@ -217,40 +231,6 @@ function App() {
     setEditingNodeId(null);
     setEditingText('');
   }, []);
-
-  const startLinkCreation = useCallback((sourceId) => {
-    setLinkCreation({ active: true, sourceId });
-  }, []);
-
-  const updateDragLine = useCallback((event) => {
-    if (!linkCreation.active) return;
-    const [x, y] = d3.pointer(event, svgRef.current);
-    const sourceNode = graphData.nodes.find(n => n.id === linkCreation.sourceId);
-    if (sourceNode && gRef.current) {
-      const path = d3.select(gRef.current).select('.drag-line');
-      path.attr('d', `M${sourceNode.x},${sourceNode.y}L${x},${y}`);
-    }
-  }, [linkCreation, graphData]);
-
-  const endLinkCreation = useCallback((event) => {
-    if (!linkCreation.active) return;
-    const [x, y] = d3.pointer(event, svgRef.current);
-    const targetNode = graphData.nodes.find(n => {
-      const dx = x - (n.x || width / 2);
-      const dy = y - (n.y || height / 2);
-      return Math.sqrt(dx * dx + dy * dy) < 60; // Within 60px radius
-    });
-    if (targetNode && targetNode.id !== linkCreation.sourceId) {
-      setGraphData(prev => ({
-        ...prev,
-        links: [...prev.links, { source: linkCreation.sourceId, target: targetNode.id }]
-      }));
-    }
-    setLinkCreation({ active: false, sourceId: null });
-    if (gRef.current) {
-      d3.select(gRef.current).select('.drag-line').attr('d', 'M0,0L0,0');
-    }
-  }, [linkCreation, graphData, width, height]);
 
   useEffect(() => {
     fetchData();
@@ -315,23 +295,32 @@ function App() {
       .attr('height', '200%');
 
     glowFilter.append('feGaussianBlur')
+      .attr('in', 'SourceAlpha')
       .attr('stdDeviation', 3)
-      .attr('result', 'coloredBlur');
+      .attr('result', 'blur');
+
+    glowFilter.append('feOffset')
+      .attr('in', 'blur')
+      .attr('dx', 0)
+      .attr('dy', 0)
+      .attr('result', 'offsetBlur');
+
+    glowFilter.append('feFlood')
+      .attr('flood-color', '#3b82f6')
+      .attr('flood-opacity', '0.8')
+      .attr('result', 'glowColor');
+
+    glowFilter.append('feComposite')
+      .attr('in', 'glowColor')
+      .attr('in2', 'offsetBlur')
+      .attr('operator', 'in')
+      .attr('result', 'glowShape');
 
     const feMerge = glowFilter.append('feMerge');
-    feMerge.append('feMergeNode').attr('in', 'coloredBlur');
+    feMerge.append('feMergeNode').attr('in', 'glowShape');
     feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Drag line for edge creation
-    g.append('path')
-      .attr('class', 'drag-line')
-      .attr('stroke', '#999')
-      .attr('stroke-width', 2)
-      .attr('fill', 'none')
-      .attr('d', 'M0,0L0,0')
-      .style('pointer-events', 'none');
-
-    // Smooth curved links
+    // Straight or elbow links for tree hierarchy
     const link = g.selectAll('.link')
       .data(graphData.links)
       .enter().append('path')
@@ -340,9 +329,10 @@ function App() {
       .attr('marker-end', 'url(#arrowhead)')
       .attr('stroke', '#9ca3af')
       .attr('stroke-width', 2)
+      .attr('d', linkArc)
       .style('transition', 'stroke 0.3s ease, stroke-width 0.3s ease');
 
-    // Link labels
+    // Link labels (hidden if empty)
     const linkLabel = g.selectAll('.link-label')
       .data(graphData.links)
       .enter().append('text')
@@ -351,8 +341,11 @@ function App() {
       .attr('fill', '#6b7280')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
+      .attr('x', d => (d.source.x + d.target.x) / 2)
+      .attr('y', d => (d.source.y + d.target.y) / 2)
       .style('pointer-events', 'none')
-      .text(d => d.label || '');
+      .text(d => d.label || '')
+      .style('display', d => d.label ? 'block' : 'none');
 
     // Nodes with animations, hover glow
     const node = g.selectAll('.node')
@@ -370,11 +363,7 @@ function App() {
         if (editingNodeId !== null) {
           saveEditing();
         }
-        if (d.hasChildren) {
-          toggleCollapse(d.id);
-        } else {
-          setSelectedNodeId(d.id);
-        }
+        setSelectedNodeName(d.name);
       })
       .on('dblclick', (event, d) => {
         event.stopPropagation();
@@ -392,40 +381,40 @@ function App() {
       .on('mouseout', function(event, d) {
         d3.select(this).select('rect')
           .attr('filter', 'url(#shadow)')
-          .attr('stroke', selectedNodeId === d.id ? '#3b82f6' : colors[d.depth % colors.length])
-          .attr('stroke-width', selectedNodeId === d.id ? 3 : 2);
+          .attr('stroke', selectedNodeName === d.name ? '#3b82f6' : colors[d.depth % colors.length])
+          .attr('stroke-width', selectedNodeName === d.name ? 3 : 2);
         g.selectAll('.link').attr('stroke', '#9ca3af').attr('stroke-width', 2);
       });
 
-    // Animate nodes in with fade and scale up
+    // Set node positions directly from tree layout
     node
       .attr('opacity', 0)
-      .attr('transform', d => `translate(${(d.x || width / 2)}, ${(d.y || height / 2)}) scale(0.5)`)
+      .attr('transform', d => `translate(${d.x}, ${d.y}) scale(0.5)`)
       .transition()
       .duration(500)
       .attr('opacity', 1)
-      .attr('transform', d => `translate(${(d.x || width / 2)}, ${(d.y || height / 2)}) scale(1)`);
+      .attr('transform', d => `translate(${d.x}, ${d.y}) scale(1)`);
 
     node.append('rect')
-      .attr('width', 140)
-      .attr('height', 50)
-      .attr('x', -70)
-      .attr('y', -25)
-      .attr('rx', 10)
-      .attr('ry', 10)
-      .attr('fill', d => d.type === 'action' ? '#dbeafe' : '#ffffff')
-      .attr('stroke', d => selectedNodeId === d.id ? '#3b82f6' : colors[d.depth % colors.length])
-      .attr('stroke-width', d => selectedNodeId === d.id ? 3 : 2)
+      .attr('width', 160)
+      .attr('height', 60)
+      .attr('x', -80)
+      .attr('y', -30)
+      .attr('rx', 8)
+      .attr('ry', 8)
+      .attr('fill', d => d.type === 'action' ? '#f1f5f9' : '#ffffff')
+      .attr('stroke', d => selectedNodeName === d.name ? '#3b82f6' : colors[d.depth % colors.length])
+      .attr('stroke-width', d => selectedNodeName === d.name ? 3 : 2)
       .attr('filter', 'url(#shadow)');
 
     node.each(function(d) {
       const group = d3.select(this);
       if (d.id === editingNodeId) {
         const foreignObject = group.append('foreignObject')
-          .attr('x', -60)
-          .attr('y', -10)
-          .attr('width', 120)
-          .attr('height', 20);
+          .attr('x', -80)
+          .attr('y', -15)
+          .attr('width', 160)
+          .attr('height', 30);
 
         foreignObject.append('xhtml:input')
           .attr('type', 'text')
@@ -434,7 +423,8 @@ function App() {
           .style('height', '100%')
           .style('border', 'none')
           .style('outline', 'none')
-          .style('font-size', '12px')
+          .style('font-size', '14px')
+          .style('font-family', 'Inter, system-ui, sans-serif')
           .style('font-weight', 'bold')
           .style('text-align', 'center')
           .on('input', function(event) {
@@ -454,7 +444,8 @@ function App() {
           .attr('x', 0)
           .attr('y', 0)
           .attr('dy', '.35em')
-          .attr('font-size', '12px')
+          .attr('font-size', '14px')
+          .attr('font-family', 'Inter, system-ui, sans-serif')
           .attr('font-weight', 'bold')
           .attr('fill', '#1f2937')
           .text(d => d.name)
@@ -462,67 +453,33 @@ function App() {
       }
     });
 
-    // Force simulation
-    simulationRef.current = d3.forceSimulation(graphData.nodes)
-      .force('link', d3.forceLink(graphData.links).id(d => d.id).distance(150).strength(0.5))
-      .force('charge', d3.forceManyBody().strength(-200))
-      .force('x', d3.forceX(width / 2).strength(0.1))
-      .force('y', d3.forceY(height / 2).strength(0.1))
-      .force('collide', d3.forceCollide(80))
-      .on('tick', ticked);
-
-    function ticked() {
-      link.attr('d', linkArc);
-      linkLabel
-        .attr('x', d => {
-          const pathLength = linkArc(d).length;
-          const midPoint = pathLength / 2;
-          const pathNode = link.node();
-          if (pathNode) {
-            const point = pathNode.getPointAtLength(midPoint);
-            return point.x;
-          }
-          return (d.source.x + d.target.x) / 2;
-        })
-        .attr('y', d => {
-          const pathLength = linkArc(d).length;
-          const midPoint = pathLength / 2;
-          const pathNode = link.node();
-          if (pathNode) {
-            const point = pathNode.getPointAtLength(midPoint);
-            return point.y;
-          }
-          return (d.source.y + d.target.y) / 2;
-        });
-      node.attr('transform', d => `translate(${d.x || width / 2},${d.y || height / 2})`);
-    }
-
     function linkArc(d) {
       const source = d.source;
       const target = d.target;
-      const dx = target.x - source.x;
-      const dy = target.y - source.y;
-      const dr = Math.hypot(dx, dy) / 2;
-      return dr > 0 ? `M${source.x},${source.y}A${dr},${dr} 0 0,1 ${target.x},${target.y}` : `M${source.x},${source.y}L${target.x},${target.y}`;
+      // Straight line
+      return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
     }
 
     function dragstarted(event, d) {
-      if (!event.active) simulationRef.current.alphaTarget(0.3).restart();
-      d.fx = d.x;
-      d.fy = d.y;
+      // No simulation, just start drag
     }
 
     function dragged(event, d) {
-      d.fx = snapToGrid ? Math.round(event.x / 20) * 20 : event.x;
-      d.fy = snapToGrid ? Math.round(event.y / 20) * 20 : event.y;
-      simulationRef.current.alpha(0.3);
+      // Constrain both x and y
+      d.x = snapToGrid ? Math.round(event.x / 20) * 20 : event.x;
+      d.y = snapToGrid ? Math.round(event.y / 20) * 20 : event.y;
+      d3.select(this).attr('transform', `translate(${d.x}, ${d.y})`);
+      // Update links
+      link.attr('d', linkArc);
+      linkLabel
+        .attr('x', d => (d.source.x + d.target.x) / 2)
+        .attr('y', d => (d.source.y + d.target.y) / 2);
     }
 
     function dragended(event, d) {
-      if (!event.active) simulationRef.current.alphaTarget(0);
-      // Keep fixed after drag for now
+      // No simulation to stop
     }
-  }, [graphData, error, width, height, colors, snapToGrid, selectedNodeId]);
+  }, [graphData, error, width, height, colors, snapToGrid, selectedNodeName, startEditing, saveEditing, cancelEditing, editingNodeId, editingText]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -588,13 +545,13 @@ function App() {
         </svg>
         {/* Floating Toolbar */}
         <div className="absolute top-4 right-4 bg-white shadow-lg rounded-lg p-2 border flex flex-col space-y-1 z-10">
-          <button onClick={zoomIn} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700">+</button>
-          <button onClick={zoomOut} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700">-</button>
-          <button onClick={fitToScreen} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700">Fit</button>
-          <button onClick={resetView} className="px-3 py-1 text-sm bg-gray-100 hover:bg-gray-200 rounded text-gray-700">Reset</button>
-          <button onClick={addNode} className="px-3 py-1 text-sm bg-blue-100 hover:bg-blue-200 rounded text-blue-700">Add</button>
-          <button onClick={deleteNode} disabled={selectedNodeId === null} className="px-3 py-1 text-sm bg-red-100 hover:bg-red-200 rounded text-red-700 disabled:opacity-50">Del</button>
-          <button onClick={() => setSnapToGrid(!snapToGrid)} className={`px-3 py-1 text-sm rounded text-gray-700 ${snapToGrid ? 'bg-green-100' : 'bg-gray-100 hover:bg-gray-200'}`}>Grid</button>
+          <button onClick={zoomIn} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">+</button>
+          <button onClick={zoomOut} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">-</button>
+          <button onClick={fitToScreen} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">↔</button>
+          <button onClick={resetView} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">⟲</button>
+          <button onClick={addNode} className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded text-blue-700 shadow-sm">+</button>
+          <button onClick={deleteNode} disabled={selectedNodeName === null} className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-700 disabled:opacity-50 shadow-sm">×</button>
+          <button onClick={() => setSnapToGrid(!snapToGrid)} className={`px-2 py-1 text-xs rounded text-gray-700 shadow-sm ${snapToGrid ? 'bg-green-100' : 'bg-gray-100 hover:bg-gray-200'}`}>⊞</button>
         </div>
       </div>
     </div>
