@@ -12,9 +12,194 @@ function App() {
   const [width, setWidth] = useState(800);
   const [height, setHeight] = useState(600);
   const [selectedNodeName, setSelectedNodeName] = useState(null);
+  const [inputText, setInputText] = useState('');
   const svgRef = useRef();
   const zoomRef = useRef();
   const gRef = useRef();
+
+  const templates = useMemo(() => ({
+    'e-commerce': {
+      name: 'E-commerce Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        { 
+          name: 'Browse Products', 
+          type: 'action',
+          children: [
+            { name: 'Product Details', type: 'page' }
+          ]
+        },
+        { name: 'Shopping Cart', type: 'page' },
+        { 
+          name: 'Checkout', 
+          type: 'action',
+          label: 'Proceed to payment'
+        },
+        { 
+          name: 'Login Required?', 
+          type: 'decision',
+          children: [
+            { name: 'Login', type: 'action', label: 'User authentication' },
+            { name: 'Guest Checkout', type: 'page', linkType: 'related', label: 'Alternative path' }
+          ]
+        },
+        { 
+          name: 'Payment Method', 
+          type: 'decision',
+          children: [
+            { name: 'Credit Card', type: 'page', label: 'Choose Card' },
+            { name: 'PayPal', type: 'action', label: 'Redirect to PayPal' }
+          ]
+        },
+        { name: 'Order Confirmation', type: 'page' },
+        { name: 'User Profile', type: 'page', linkType: 'related' }
+      ]
+    },
+    'portfolio': {
+      name: 'Portfolio Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        { name: 'About Me', type: 'page' },
+        { 
+          name: 'Projects', 
+          type: 'page',
+          children: [
+            { name: 'Project 1', type: 'page' },
+            { name: 'Project 2', type: 'page' }
+          ]
+        },
+        { name: 'Contact', type: 'page' },
+        { name: 'Blog', type: 'page', linkType: 'related' }
+      ]
+    },
+    'blog': {
+      name: 'Blog Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        { 
+          name: 'Posts List', 
+          type: 'page',
+          children: [
+            { name: 'Single Post', type: 'page' }
+          ]
+        },
+        { 
+          name: 'Categories', 
+          type: 'decision',
+          children: [
+            { name: 'Technology', type: 'page' },
+            { name: 'Design', type: 'page' },
+            { name: 'Lifestyle', type: 'page' }
+          ]
+        },
+        { name: 'About', type: 'page' },
+        { name: 'Comments Section', type: 'action', linkType: 'related' }
+      ]
+    },
+    'restaurant': {
+      name: 'Restaurant Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        { name: 'Menu', type: 'page' },
+        { 
+          name: 'Browse Dishes', 
+          type: 'action',
+          children: [
+            { name: 'Dish Details', type: 'page' }
+          ]
+        },
+        { 
+          name: 'Order Online', 
+          type: 'decision',
+          children: [
+            { name: 'Dine In', type: 'page', label: 'Reserve table' },
+            { name: 'Takeaway', type: 'action', label: 'Quick order' }
+          ]
+        },
+        { name: 'Reservations', type: 'page' },
+        { name: 'Contact', type: 'page', linkType: 'related' },
+        { name: 'Reviews', type: 'page' }
+      ]
+    },
+    'university': {
+      name: 'University Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        { 
+          name: 'Admissions', 
+          type: 'decision',
+          children: [
+            { name: 'Apply Online', type: 'action' },
+            { name: 'Visit Campus', type: 'page', linkType: 'related' }
+          ]
+        },
+        { name: 'Courses', type: 'page' },
+        { 
+          name: 'Enroll', 
+          type: 'action',
+          children: [
+            { name: 'Course Details', type: 'page' }
+          ]
+        },
+        { name: 'Library', type: 'page' },
+        { name: 'Resources', type: 'page', linkType: 'related' },
+        { name: 'Contact', type: 'page' }
+      ]
+    },
+    'banking app': {
+      name: 'Banking App',
+      type: 'page',
+      children: [
+        { name: 'Login', type: 'action' },
+        { name: 'Dashboard', type: 'page' },
+        { 
+          name: 'Transfer Funds', 
+          type: 'decision',
+          children: [
+            { name: 'Internal Transfer', type: 'action' },
+            { name: 'External Transfer', type: 'page', label: 'To other banks' }
+          ]
+        },
+        { name: 'Account Details', type: 'page' },
+        { name: 'Support', type: 'page', linkType: 'related' },
+        { name: 'Transactions', type: 'page' }
+      ]
+    }
+  }), []);
+
+  const genericTemplate = useMemo(() => ({
+    name: 'Generic Site',
+    type: 'page',
+    children: [
+      { name: 'Home', type: 'page' },
+      { name: 'Services', type: 'page' },
+      { 
+        name: 'Service Selection', 
+        type: 'decision',
+        children: [
+          { name: 'Basic Service', type: 'action' },
+          { name: 'Premium Service', type: 'page' }
+        ]
+      },
+      { name: 'Blog', type: 'page', linkType: 'related' },
+      { name: 'Login', type: 'action' },
+      { name: 'Contact', type: 'page' },
+      { 
+        name: 'Checkout', 
+        type: 'decision',
+        children: [
+          { name: 'Payment Methods', type: 'page' },
+          { name: 'Order Review', type: 'action' }
+        ]
+      },
+      { name: 'Payment', type: 'page' }
+    ]
+  }), []);
 
   const colors = useMemo(() => ['#f8fafc', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'], []);
 
@@ -43,7 +228,12 @@ function App() {
       });
 
       if (parentId !== null) {
-        links.push({ source: nodes[parentId], target: nodes[id], label: d.data.label || '' });
+        links.push({ 
+          source: nodes[parentId], 
+          target: nodes[id], 
+          label: d.data.label || '', 
+          type: d.data.linkType || 'direct' 
+        });
       }
 
       if (d.children) {
@@ -110,19 +300,8 @@ function App() {
     try {
       const text = await file.text();
       const jsonData = JSON.parse(text);
-
-      const response = await fetch('http://localhost:3002/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(jsonData),
-      });
-
-      if (response.ok) {
-        setIaData(jsonData);
-        fetchData();
-      } else {
-        setError('Failed to upload JSON.');
-      }
+      setIaData(jsonData);
+      setError('');
     } catch (err) {
       setError('Invalid JSON file.');
     } finally {
@@ -252,6 +431,34 @@ function App() {
     }
   }, []);
 
+  const generateIA = useCallback(() => {
+    const keyword = inputText.trim().toLowerCase();
+    if (!keyword) {
+      setError('Please enter a keyword');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      let generated;
+      if (templates[keyword]) {
+        generated = templates[keyword];
+      } else {
+        generated = genericTemplate;
+        setError('Keyword not recognized. Using generic template. Try "e-commerce", "portfolio", or "blog".');
+      }
+      setIaData(generated);
+      // Auto-fit after generation
+      setTimeout(() => fitToScreen(), 100);
+    } catch (err) {
+      setError('Failed to generate IA.');
+      setIaData(genericTemplate);
+      setTimeout(() => fitToScreen(), 100);
+    } finally {
+      setLoading(false);
+    }
+  }, [inputText, templates, genericTemplate, fitToScreen]);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -349,6 +556,7 @@ function App() {
       .attr('marker-end', 'url(#arrowhead)')
       .attr('stroke', '#9ca3af')
       .attr('stroke-width', 2.5)
+      .attr('stroke-dasharray', d => d.type === 'related' ? '5,5' : 'none')
       .attr('d', linkArc)
       .style('transition', 'stroke 0.3s ease, stroke-width 0.3s ease');
 
@@ -441,7 +649,7 @@ function App() {
 
         foreignObject.append('xhtml:input')
           .attr('type', 'text')
-          .attr('value', editingText)
+          .property('value', editingText)
           .style('width', '100%')
           .style('height', '100%')
           .style('border', 'none')
@@ -511,7 +719,7 @@ function App() {
     function dragended(event, d) {
       // No simulation to stop
     }
-  }, [graphData, error, width, height, colors, snapToGrid, selectedNodeName, startEditing, saveEditing, cancelEditing, editingNodeId, editingText]);
+  }, [graphData, error, width, height, colors, snapToGrid, selectedNodeName, startEditing, saveEditing, cancelEditing, editingNodeId, editingText, getNodePath]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -553,18 +761,35 @@ function App() {
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="p-4 bg-white shadow-sm border-b flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">IA Flowchart Diagram</h1>
-        <div className="flex items-center space-x-2">
-          <input
-            type="file"
-            accept=".json"
-            onChange={handleFileUpload}
-            disabled={loading}
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-          />
+        <div className="flex flex-col items-end space-y-2">
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              disabled={loading}
+              className="w-64 px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm placeholder-gray-500"
+              placeholder="Enter a keyword, e.g., 'e-commerce'"
+            />
+            <button 
+              onClick={generateIA} 
+              disabled={loading}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+            >
+              Generate from Keyword
+            </button>
+            <input
+              type="file"
+              accept=".json"
+              onChange={handleFileUpload}
+              disabled={loading}
+              className="file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+          </div>
           <button 
             onClick={fetchData} 
             disabled={loading} 
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 self-end"
           >
             Refresh
           </button>
