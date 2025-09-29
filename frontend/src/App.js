@@ -232,6 +232,26 @@ function App() {
     setEditingText('');
   }, []);
 
+  const getNodePath = useCallback((d) => {
+    const w = 80; // half width 160
+    const h = 30; // half height 60
+    const rx = 8;
+    const ry = 8;
+
+    switch (d.type) {
+      case 'action':
+        // Oval (ellipse)
+        return `M ${-w} 0 A ${w} ${h} 0 1 1 ${w} 0 A ${w} ${h} 0 1 1 ${-w} 0 Z`;
+      case 'decision':
+        // Diamond
+        return `M 0 ${-h} L ${w} 0 L 0 ${h} L ${-w} 0 Z`;
+      case 'page':
+      default:
+        // Rounded rectangle
+        return `M ${-w + rx} ${-h} h ${w - 2 * rx} a ${rx} ${ry} 0 0 1 ${rx} ${ry} v ${h - 2 * ry} a ${rx} ${ry} 0 0 1 -${rx} ${ry} h ${-(w - 2 * rx)} a ${rx} ${ry} 0 0 1 -${rx} -${ry} v ${-(h - 2 * ry)} a ${rx} ${ry} 0 0 1 ${rx} -${ry} z`;
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -320,7 +340,7 @@ function App() {
     feMerge.append('feMergeNode').attr('in', 'glowShape');
     feMerge.append('feMergeNode').attr('in', 'SourceGraphic');
 
-    // Straight or elbow links for tree hierarchy
+    // Curved links for smoother appearance
     const link = g.selectAll('.link')
       .data(graphData.links)
       .enter().append('path')
@@ -328,7 +348,7 @@ function App() {
       .attr('fill', 'none')
       .attr('marker-end', 'url(#arrowhead)')
       .attr('stroke', '#9ca3af')
-      .attr('stroke-width', 2)
+      .attr('stroke-width', 2.5)
       .attr('d', linkArc)
       .style('transition', 'stroke 0.3s ease, stroke-width 0.3s ease');
 
@@ -337,15 +357,16 @@ function App() {
       .data(graphData.links)
       .enter().append('text')
       .attr('class', 'link-label')
-      .attr('font-size', 10)
+      .attr('font-size', 12)
       .attr('fill', '#6b7280')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => (d.source.y + d.target.y) / 2)
+      .attr('y', d => Math.min(d.source.y, d.target.y) - 15)
       .style('pointer-events', 'none')
       .text(d => d.label || '')
-      .style('display', d => d.label ? 'block' : 'none');
+      .style('display', d => d.label ? 'block' : 'none')
+      .style('text-shadow', '1px 1px 2px rgba(255,255,255,0.8)');
 
     // Nodes with animations, hover glow
     const node = g.selectAll('.node')
@@ -370,20 +391,20 @@ function App() {
         startEditing(d);
       })
       .on('mouseover', function(event, d) {
-        d3.select(this).select('rect')
+        d3.select(this).select('path')
           .attr('filter', 'url(#glow)')
           .attr('stroke', '#3b82f6')
           .attr('stroke-width', 4);
         // Highlight outgoing links
         g.selectAll('.link').filter(l => l.source.id === d.id)
-          .attr('stroke', '#3b82f6').attr('stroke-width', 3);
+          .attr('stroke', '#3b82f6').attr('stroke-width', 3.5);
       })
       .on('mouseout', function(event, d) {
-        d3.select(this).select('rect')
+        d3.select(this).select('path')
           .attr('filter', 'url(#shadow)')
           .attr('stroke', selectedNodeName === d.name ? '#3b82f6' : colors[d.depth % colors.length])
-          .attr('stroke-width', selectedNodeName === d.name ? 3 : 2);
-        g.selectAll('.link').attr('stroke', '#9ca3af').attr('stroke-width', 2);
+          .attr('stroke-width', selectedNodeName === d.name ? 4 : 2.5);
+        g.selectAll('.link').attr('stroke', '#9ca3af').attr('stroke-width', 2.5);
       });
 
     // Set node positions directly from tree layout
@@ -395,16 +416,18 @@ function App() {
       .attr('opacity', 1)
       .attr('transform', d => `translate(${d.x}, ${d.y}) scale(1)`);
 
-    node.append('rect')
-      .attr('width', 160)
-      .attr('height', 60)
-      .attr('x', -80)
-      .attr('y', -30)
-      .attr('rx', 8)
-      .attr('ry', 8)
-      .attr('fill', d => d.type === 'action' ? '#f1f5f9' : '#ffffff')
+    node.append('path')
+      .attr('d', getNodePath)
+      .attr('fill', d => {
+        switch (d.type) {
+          case 'page': return '#dbeafe';
+          case 'action': return '#dcfce7';
+          case 'decision': return '#fed7aa';
+          default: return '#f8fafc';
+        }
+      })
       .attr('stroke', d => selectedNodeName === d.name ? '#3b82f6' : colors[d.depth % colors.length])
-      .attr('stroke-width', d => selectedNodeName === d.name ? 3 : 2)
+      .attr('stroke-width', d => selectedNodeName === d.name ? 4 : 2.5)
       .attr('filter', 'url(#shadow)');
 
     node.each(function(d) {
@@ -412,9 +435,9 @@ function App() {
       if (d.id === editingNodeId) {
         const foreignObject = group.append('foreignObject')
           .attr('x', -80)
-          .attr('y', -15)
+          .attr('y', -30)
           .attr('width', 160)
-          .attr('height', 30);
+          .attr('height', 60);
 
         foreignObject.append('xhtml:input')
           .attr('type', 'text')
@@ -427,6 +450,9 @@ function App() {
           .style('font-family', 'Inter, system-ui, sans-serif')
           .style('font-weight', 'bold')
           .style('text-align', 'center')
+          .style('display', 'flex')
+          .style('align-items', 'center')
+          .style('justify-content', 'center')
           .on('input', function(event) {
             setEditingText(event.target.value);
           })
@@ -456,8 +482,14 @@ function App() {
     function linkArc(d) {
       const source = d.source;
       const target = d.target;
-      // Straight line
-      return `M ${source.x} ${source.y} L ${target.x} ${target.y}`;
+      // Curved bezier line for smoother appearance
+      const dx = target.x - source.x;
+      const dy = target.y - source.y;
+      const cp1x = source.x + dx / 3;
+      const cp1y = source.y + dy / 2 - 20;
+      const cp2x = source.x + 2 * dx / 3;
+      const cp2y = target.y - dy / 2 + 20;
+      return `M ${source.x} ${source.y} C ${cp1x} ${cp1y} ${cp2x} ${cp2y} ${target.x} ${target.y}`;
     }
 
     function dragstarted(event, d) {
@@ -473,7 +505,7 @@ function App() {
       link.attr('d', linkArc);
       linkLabel
         .attr('x', d => (d.source.x + d.target.x) / 2)
-        .attr('y', d => (d.source.y + d.target.y) / 2);
+        .attr('y', d => Math.min(d.source.y, d.target.y) - 15);
     }
 
     function dragended(event, d) {
@@ -552,6 +584,32 @@ function App() {
           <button onClick={addNode} className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded text-blue-700 shadow-sm">+</button>
           <button onClick={deleteNode} disabled={selectedNodeName === null} className="px-2 py-1 text-xs bg-red-100 hover:bg-red-200 rounded text-red-700 disabled:opacity-50 shadow-sm">×</button>
           <button onClick={() => setSnapToGrid(!snapToGrid)} className={`px-2 py-1 text-xs rounded text-gray-700 shadow-sm ${snapToGrid ? 'bg-green-100' : 'bg-gray-100 hover:bg-gray-200'}`}>⊞</button>
+        </div>
+        {/* Legend */}
+        <div className="absolute bottom-4 right-4 bg-white/90 shadow-lg rounded-lg p-4 border border-gray-200 z-10 max-w-xs backdrop-blur-sm">
+          <h3 className="text-sm font-semibold text-gray-800 mb-2">Legend</h3>
+          <div className="space-y-1 text-xs text-gray-700">
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">□</span>
+              <span className="text-blue-600">Rectangle = Page / Screen</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">○</span>
+              <span className="text-green-600">Oval = Process / Action</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-lg">◇</span>
+              <span className="text-orange-600">Diamond = Decision</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-mono">———</span>
+              <span>Solid line = Direct navigation</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-sm font-mono">- - -</span>
+              <span>Dashed line = Related link</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
