@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+  import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
 
 function App() {
@@ -13,9 +13,22 @@ function App() {
   const [height, setHeight] = useState(600);
   const [selectedNodeName, setSelectedNodeName] = useState(null);
   const [inputText, setInputText] = useState('');
+  const [aiPrompt, setAiPrompt] = useState('');
+  // Store conversation history as array of { sender: 'user' | 'ai', message: string }
+  const [conversation, setConversation] = useState([]);
+  const [aiLoading, setAiLoading] = useState(false);
+  // Removed aiResponse and setAiResponse state
   const svgRef = useRef();
   const zoomRef = useRef();
   const gRef = useRef();
+
+  const conversationEndRef = useRef(null);
+
+  useEffect(() => {
+    if (conversationEndRef.current) {
+      conversationEndRef.current.scrollTop = conversationEndRef.current.scrollHeight;
+    }
+  }, [conversation]);
 
   const templates = useMemo(() => ({
     'e-commerce': {
@@ -315,21 +328,21 @@ function App() {
     }
   }, [iaData, hierarchyToGraph]);
 
-    const fetchData = async () => {
-      try {
-        const response = await fetch('http://localhost:3003/ia');
-        if (response.ok) {
-          const data = await response.json();
-          setIaData(data);
-          setError('');
-        } else {
-          setIaData(null);
-          setError('No IA data uploaded yet.');
-        }
-      } catch (err) {
-        setError('Failed to fetch data.');
+  const fetchData = async () => {
+    try {
+      const response = await fetch('http://localhost:3003/ia');
+      if (response.ok) {
+        const data = await response.json();
+        setIaData(data);
+        setError('');
+      } else {
+        setIaData(null);
+        setError('');
       }
-    };
+    } catch (err) {
+      setError('Failed to fetch data.');
+    }
+  };
 
   const zoomIn = useCallback(() => {
     if (zoomRef.current) {
@@ -796,12 +809,12 @@ function App() {
         </div>
       </div>
       {loading && <p className="p-2 text-blue-500 text-center">Uploading...</p>}
-      {error && <p className="p-2 text-red-500 text-center">{error}</p>}
+      {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded border border-red-400 text-center" role="alert">{error}</div>}
       <div className="flex-1 relative">
         <svg ref={svgRef} width={width} height={height} className="absolute inset-0 w-full h-full bg-white">
         </svg>
         {/* Floating Toolbar */}
-        <div className="absolute top-4 right-4 bg-white shadow-lg rounded-lg p-2 border flex flex-col space-y-1 z-10">
+        <div className="absolute top-4 left-4 bg-white shadow-lg rounded-lg p-2 border flex flex-col space-y-1 z-10">
           <button onClick={zoomIn} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">+</button>
           <button onClick={zoomOut} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">-</button>
           <button onClick={fitToScreen} className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded text-gray-700 shadow-sm">↔</button>
@@ -834,6 +847,167 @@ function App() {
               <span className="text-sm font-mono">- - -</span>
               <span>Dashed line = Related link</span>
             </div>
+          </div>
+        </div>
+        {/* AI Box */}
+        <div className="absolute top-0 right-0 h-full w-1/4 bg-white shadow-lg border-l border-gray-200 z-10 flex flex-col p-4 backdrop-blur-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4">AI Box</h3>
+          <div ref={conversationEndRef} className="flex flex-col flex-1 overflow-y-auto mb-4 border border-gray-300 bg-white p-2 space-y-2 rounded-md">
+            {conversation.map((entry, index) => {
+              // Function to parse code blocks in message
+              const parseCodeBlocks = (text) => {
+                const regex = /```(\w+)?\n([\s\S]*?)```/g;
+                const parts = [];
+                let lastIndex = 0;
+                let match;
+                while ((match = regex.exec(text)) !== null) {
+                  if (match.index > lastIndex) {
+                    parts.push({ type: 'text', content: text.substring(lastIndex, match.index) });
+                  }
+                  parts.push({ type: 'code', lang: match[1] || '', content: match[2] });
+                  lastIndex = regex.lastIndex;
+                }
+                if (lastIndex < text.length) {
+                  parts.push({ type: 'text', content: text.substring(lastIndex) });
+                }
+                return parts;
+              };
+
+              // Render code block UI
+              const CodeBlock = ({ lang, content }) => {
+                const copyCode = () => {
+                  navigator.clipboard.writeText(content);
+                };
+                return (
+                  <div className="relative bg-gray-900 text-gray-100 rounded-md p-4 font-mono text-sm overflow-auto my-2">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-semibold">{lang || 'code'}</span>
+                      <button
+                        onClick={copyCode}
+                        className="text-gray-400 hover:text-white text-xs flex items-center space-x-1"
+                        aria-label="Copy code"
+                        title="Copy code"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                          <rect x="8" y="8" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
+                          <rect x="4" y="4" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        <span>Copy code</span>
+                      </button>
+                    </div>
+                    <pre className="whitespace-pre-wrap">{content}</pre>
+                  </div>
+                );
+              };
+
+              if (entry.sender === 'ai') {
+                const parts = parseCodeBlocks(entry.message);
+                return (
+                  <div
+                    key={index}
+                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-start bg-gray-300 text-gray-900 flex flex-col"
+                  >
+                    {parts.map((part, i) => {
+                      if (part.type === 'code') {
+                        return <CodeBlock key={i} lang={part.lang} content={part.content} />;
+                      } else {
+                        return <span key={i}>{part.content}</span>;
+                      }
+                    })}
+                  </div>
+                );
+              } else {
+                return (
+                  <div
+                    key={index}
+                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-end bg-blue-500 text-white"
+                  >
+                    <span>{entry.message}</span>
+                  </div>
+                );
+              }
+            })}
+
+          </div>
+          <div className="relative w-full rounded border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 flex items-center">
+            <input
+              type="text"
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              className="flex-grow p-3 focus:outline-none pr-12 bg-transparent rounded-l text-gray-700"
+              placeholder="Send a message"
+              disabled={aiLoading}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !aiLoading) {
+                  e.preventDefault();
+                  if (!aiPrompt.trim()) {
+                    setError('Please enter a prompt for AI.');
+                    return;
+                  }
+                  setAiLoading(true);
+                  setError('');
+                  // Add user message to conversation (append to bottom)
+                  setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
+                  fetch('http://localhost:3003/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: aiPrompt }),
+                  })
+                    .then(response => {
+                      if (!response.ok) {
+                        throw new Error('Failed to get AI response');
+                      }
+                      return response.json();
+                    })
+                    .then(data => {
+                      // Add AI response to conversation (append to bottom)
+                      setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
+                      setAiPrompt(''); // Clear input after sending
+                    })
+                    .catch(() => {
+                      setError('Error fetching AI response.');
+                    })
+                    .finally(() => {
+                      setAiLoading(false);
+                    });
+                }
+              }}
+            />
+            <button
+              onClick={async () => {
+                if (!aiPrompt.trim()) {
+                  setError('Please enter a prompt for AI.');
+                  return;
+                }
+                setAiLoading(true);
+                setError('');
+                // Add user message to conversation (append to bottom)
+                setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
+                try {
+                  const response = await fetch('http://localhost:3003/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: aiPrompt }),
+                  });
+                  if (!response.ok) {
+                    throw new Error('Failed to get AI response');
+                  }
+                  const data = await response.json();
+                  // Add AI response to conversation (append to bottom)
+                  setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
+                  setAiPrompt(''); // Clear input after sending
+                } catch (err) {
+                  setError('Error fetching AI response.');
+                } finally {
+                  setAiLoading(false);
+                }
+              }}
+              disabled={aiLoading}
+              className="p-3 text-gray-600 rounded-r hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"
+              aria-label="Send to AI"
+            >
+              {aiLoading ? '⏳' : '➤'}
+            </button>
           </div>
         </div>
       </div>
