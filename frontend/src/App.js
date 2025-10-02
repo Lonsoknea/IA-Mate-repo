@@ -18,6 +18,9 @@ function App() {
   const [conversation, setConversation] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
   // Removed aiResponse and setAiResponse state
+  const [legendPosition, setLegendPosition] = useState({ x: 80, y: 200 });
+  const [isDraggingLegend, setIsDraggingLegend] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const svgRef = useRef();
   const zoomRef = useRef();
   const gRef = useRef();
@@ -824,7 +827,27 @@ function App() {
           <button onClick={() => setSnapToGrid(!snapToGrid)} className={`px-2 py-1 text-xs rounded text-gray-700 shadow-sm ${snapToGrid ? 'bg-green-100' : 'bg-gray-100 hover:bg-gray-200'}`}>⊞</button>
         </div>
         {/* Legend */}
-        <div className="absolute bottom-4 right-4 bg-white/90 shadow-lg rounded-lg p-4 border border-gray-200 z-10 max-w-xs backdrop-blur-sm">
+        <div
+          className="absolute bg-white/90 shadow-lg rounded-lg p-4 border border-gray-200 z-50 max-w-xs backdrop-blur-sm cursor-move select-none"
+          style={{ left: legendPosition.x, top: legendPosition.y }}
+          onMouseDown={(e) => {
+            setIsDraggingLegend(true);
+            setDragOffset({
+              x: e.clientX - legendPosition.x,
+              y: e.clientY - legendPosition.y,
+            });
+          }}
+          onMouseUp={() => setIsDraggingLegend(false)}
+          onMouseLeave={() => setIsDraggingLegend(false)}
+          onMouseMove={(e) => {
+            if (isDraggingLegend) {
+              setLegendPosition({
+                x: e.clientX - dragOffset.x,
+                y: e.clientY - dragOffset.y,
+              });
+            }
+          }}
+        >
           <h3 className="text-sm font-semibold text-gray-800 mb-2">Legend</h3>
           <div className="space-y-1 text-xs text-gray-700">
             <div className="flex items-center space-x-2">
