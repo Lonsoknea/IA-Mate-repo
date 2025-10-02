@@ -900,32 +900,51 @@ function App() {
                 );
               };
 
-              if (entry.sender === 'ai') {
-                const parts = parseCodeBlocks(entry.message);
-                return (
-                  <div
-                    key={index}
-                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-start bg-gray-300 text-gray-900 flex flex-col"
-                  >
-                    {parts.map((part, i) => {
-                      if (part.type === 'code') {
-                        return <CodeBlock key={i} lang={part.lang} content={part.content} />;
-                      } else {
-                        return <span key={i}>{part.content}</span>;
-                      }
-                    })}
-                  </div>
-                );
-              } else {
-                return (
-                  <div
-                    key={index}
-                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-end bg-blue-500 text-white"
-                  >
-                    <span>{entry.message}</span>
-                  </div>
-                );
-              }
+                  if (entry.sender === 'ai') {
+                    // Remove ** signs from AI message
+                    const cleanedMessage = entry.message.replace(/\*\*/g, '');
+                    // Replace specific text pattern in AI message
+                    const modifiedMessage = cleanedMessage.replace(
+                      /Python is a popular and powerful computer programming language\./g,
+                      'Python is a " popular and powerful computer programming language" .'
+                    );
+                    const parts = parseCodeBlocks(modifiedMessage);
+                    return (
+                      <div
+                        key={index}
+                        className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-start bg-gray-300 text-gray-900 flex flex-col"
+                      >
+                        {parts.map((part, i) => {
+                          if (part.type === 'code') {
+                            return <CodeBlock key={i} lang={part.lang} content={part.content} />;
+                          } else {
+                            return <span key={i}>{part.content}</span>;
+                          }
+                        })}
+                        <button
+                          onClick={() => navigator.clipboard.writeText(modifiedMessage)}
+                          className="self-start mt-2 flex items-center space-x-1 text-gray-600 hover:text-gray-900 text-xs"
+                          aria-label="Copy AI answer"
+                          title="Copy AI answer"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
+                            <rect x="8" y="8" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
+                            <rect x="4" y="4" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span>Copy</span>
+                        </button>
+                      </div>
+                    );
+                  } else {
+                    return (
+                      <div
+                        key={index}
+                        className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-end bg-blue-500 text-white"
+                      >
+                        <span>{entry.message}</span>
+                      </div>
+                    );
+                  }
             })}
 
           </div>
