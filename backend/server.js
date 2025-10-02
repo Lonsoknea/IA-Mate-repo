@@ -1,22 +1,54 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-let iaData = null;
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/ia-mate', { useNewUrlParser: true, useUnifiedTopology: true })
+  .then(() => console.log('Connected to MongoDB'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-app.post('/upload', (req, res) => {
-  iaData = req.body;
-  res.json({ message: 'IA uploaded successfully' });
+// Define schema for IA data
+const IaDataSchema = new mongoose.Schema({
+  data: Object,
+  createdAt: { type: Date, default: Date.now }
 });
 
-app.get('/ia', (req, res) => {
-  if (iaData) {
-    res.json(iaData);
-  } else {
-    res.status(404).json({ error: 'No IA data uploaded yet' });
+const IaData = mongoose.model('IaData', IaDataSchema);
+
+// Define schema for conversations
+const ConversationSchema = new mongoose.Schema({
+  messages: [{ sender: String, message: String, timestamp: { type: Date, default: Date.now } }],
+  createdAt: { type: Date, default: Date.now }
+});
+
+const Conversation = mongoose.model('Conversation', ConversationSchema);
+
+app.post('/upload', async (req, res) => {
+  try {
+    const newIaData = new IaData({ data: req.body });
+    await newIaData.save();
+    res.json({ message: 'IA uploaded successfully' });
+  } catch (error) {
+    console.error('Error saving IA data:', error);
+    res.status(500).json({ error: 'Failed to save IA data' });
+  }
+});
+
+app.get('/ia', async (req, res) => {
+  try {
+    const latest = await IaData.findOne().sort({ createdAt: -1 });
+    if (latest) {
+      res.json(latest.data);
+    } else {
+      res.status(404).json({ error: 'No IA data uploaded yet' });
+    }
+  } catch (error) {
+    console.error('Error fetching IA data:', error);
+    res.status(500).json({ error: 'Failed to fetch IA data' });
   }
 });
 

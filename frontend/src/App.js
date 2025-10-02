@@ -17,6 +17,7 @@ function App() {
   // Store conversation history as array of { sender: 'user' | 'ai', message: string }
   const [conversation, setConversation] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   // Removed aiResponse and setAiResponse state
   const [legendPosition, setLegendPosition] = useState({ x: 80, y: 200 });
   const [isDraggingLegend, setIsDraggingLegend] = useState(false);
@@ -32,6 +33,14 @@ function App() {
       conversationEndRef.current.scrollTop = conversationEndRef.current.scrollHeight;
     }
   }, [conversation]);
+
+  useEffect(() => {
+    // Load conversations from DB on mount
+    fetch('http://localhost:3003/conversations')
+      .then(res => res.json())
+      .then(data => setConversation(data.messages || []))
+      .catch(err => console.error('Failed to load conversations', err));
+  }, []);
 
   const templates = useMemo(() => ({
     'e-commerce': {
@@ -802,13 +811,6 @@ function App() {
               className="file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
             />
           </div>
-          <button 
-            onClick={fetchData} 
-            disabled={loading} 
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 self-end"
-          >
-            Refresh
-          </button>
         </div>
       </div>
       {loading && <p className="p-2 text-blue-500 text-center">Uploading...</p>}
@@ -971,6 +973,15 @@ function App() {
             })}
 
           </div>
+          <button onClick={() => setShowHistory(!showHistory)} className="mb-2 px-4 py-2 bg-gray-500 text-white rounded">View History</button>
+          {showHistory && (
+            <div className="mb-4">
+              <h4>History</h4>
+              <ul>
+                {conversation.filter(c => c.sender === 'user').map((c, i) => <li key={i}>{c.message}</li>)}
+              </ul>
+            </div>
+          )}
           <div className="relative w-full rounded border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 flex items-center">
             <input
               type="text"

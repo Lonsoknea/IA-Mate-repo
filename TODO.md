@@ -10,7 +10,11 @@
 - [x] Include input field for user prompt
 - [x] Add button to send prompt to backend /ai endpoint
 - [x] Display AI response in the UI
+- [x] Add history feature to view previous user prompts
 
 ## Testing
 - [ ] Test the AI endpoint with sample input
 - [ ] Verify frontend AI box sends requests and displays responses
+
+## Delete Refresh Button
+- [x] Remove the refresh button from the header in App.js
