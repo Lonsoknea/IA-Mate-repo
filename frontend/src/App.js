@@ -315,31 +315,31 @@ function App() {
     }
   }, [iaData, hierarchyToGraph]);
 
-  const fetchData = async () => {
-    try {
-      const response = await fetch('http://localhost:3002/ia');
-      if (response.ok) {
-        const data = await response.json();
-        setIaData(data);
-        setError('');
-      } else {
-        setIaData(null);
-        setError('No IA data uploaded yet.');
+    const fetchData = async () => {
+      try {
+        const response = await fetch('http://localhost:3003/ia');
+        if (response.ok) {
+          const data = await response.json();
+          setIaData(data);
+          setError('');
+        } else {
+          setIaData(null);
+          setError('No IA data uploaded yet.');
+        }
+      } catch (err) {
+        setError('Failed to fetch data.');
       }
-    } catch (err) {
-      setError('Failed to fetch data.');
-    }
-  };
+    };
 
   const zoomIn = useCallback(() => {
     if (zoomRef.current) {
-      zoomRef.current.scaleBy(svgRef.current, 1.2);
+      zoomRef.current.scaleBy(d3.select(svgRef.current), 1.2);
     }
   }, []);
 
   const zoomOut = useCallback(() => {
     if (zoomRef.current) {
-      zoomRef.current.scaleBy(svgRef.current, 0.8);
+      zoomRef.current.scaleBy(d3.select(svgRef.current), 0.8);
     }
   }, []);
 
@@ -352,13 +352,13 @@ function App() {
       const midY = (bounds.y + bounds.height / 2);
       const scale = 0.85;
       const translate = [fullWidth / 2 - scale * midX, fullHeight / 2 - scale * midY];
-      zoomRef.current.transform(svgRef.current, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+      zoomRef.current.transform(d3.select(svgRef.current), d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
     }
   }, [width, height]);
 
   const resetView = useCallback(() => {
     if (zoomRef.current) {
-      zoomRef.current.transform(svgRef.current, d3.zoomIdentity);
+      zoomRef.current.transform(d3.select(svgRef.current), d3.zoomIdentity);
     }
   }, []);
 
