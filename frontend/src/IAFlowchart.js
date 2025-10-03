@@ -196,6 +196,140 @@ function IAFlowchart() {
         { name: 'Support', type: 'page', linkType: 'related' },
         { name: 'Transactions', type: 'page' }
       ]
+    },
+    'social media': {
+      name: 'Social Media Platform',
+      type: 'page',
+      children: [
+        { name: 'Login', type: 'action' },
+        { name: 'Feed', type: 'page' },
+        {
+          name: 'Create Post',
+          type: 'action',
+          children: [
+            { name: 'Add Media', type: 'page' },
+            { name: 'Post Options', type: 'decision' }
+          ]
+        },
+        { name: 'Profile', type: 'page' },
+        {
+          name: 'Notifications',
+          type: 'page',
+          children: [
+            { name: 'Likes', type: 'action' },
+            { name: 'Comments', type: 'action' }
+          ]
+        },
+        { name: 'Messages', type: 'page', linkType: 'related' },
+        { name: 'Settings', type: 'page' }
+      ]
+    },
+    'news website': {
+      name: 'News Website',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        {
+          name: 'News Categories',
+          type: 'decision',
+          children: [
+            { name: 'Politics', type: 'page' },
+            { name: 'Sports', type: 'page' },
+            { name: 'Entertainment', type: 'page' }
+          ]
+        },
+        {
+          name: 'Article Page',
+          type: 'page',
+          children: [
+            { name: 'Comments', type: 'action' },
+            { name: 'Share', type: 'action' }
+          ]
+        },
+        { name: 'Search', type: 'action' },
+        { name: 'About', type: 'page', linkType: 'related' },
+        { name: 'Contact', type: 'page' }
+      ]
+    },
+    'learning management system': {
+      name: 'Learning Management System',
+      type: 'page',
+      children: [
+        { name: 'Login', type: 'action' },
+        { name: 'Dashboard', type: 'page' },
+        {
+          name: 'Courses',
+          type: 'page',
+          children: [
+            { name: 'Course Content', type: 'page' },
+            { name: 'Assignments', type: 'action' }
+          ]
+        },
+        {
+          name: 'Grades',
+          type: 'page',
+          children: [
+            { name: 'View Grades', type: 'action' },
+            { name: 'Feedback', type: 'page' }
+          ]
+        },
+        { name: 'Discussion Forums', type: 'page', linkType: 'related' },
+        { name: 'Profile', type: 'page' }
+      ]
+    },
+    'fitness app': {
+      name: 'Fitness App',
+      type: 'page',
+      children: [
+        { name: 'Login', type: 'action' },
+        { name: 'Home Dashboard', type: 'page' },
+        {
+          name: 'Workouts',
+          type: 'decision',
+          children: [
+            { name: 'Start Workout', type: 'action' },
+            { name: 'View History', type: 'page' }
+          ]
+        },
+        { name: 'Progress Tracking', type: 'page' },
+        {
+          name: 'Nutrition',
+          type: 'page',
+          children: [
+            { name: 'Meal Plans', type: 'action' },
+            { name: 'Calorie Counter', type: 'page' }
+          ]
+        },
+        { name: 'Community', type: 'page', linkType: 'related' },
+        { name: 'Settings', type: 'page' }
+      ]
+    },
+    'travel booking': {
+      name: 'Travel Booking Site',
+      type: 'page',
+      children: [
+        { name: 'Home', type: 'page' },
+        {
+          name: 'Search Flights/Hotels',
+          type: 'action',
+          children: [
+            { name: 'Flight Results', type: 'page' },
+            { name: 'Hotel Results', type: 'page' }
+          ]
+        },
+        { name: 'Booking Details', type: 'page' },
+        {
+          name: 'Payment',
+          type: 'decision',
+          children: [
+            { name: 'Credit Card', type: 'action' },
+            { name: 'PayPal', type: 'action' }
+          ]
+        },
+        { name: 'Confirmation', type: 'page' },
+        { name: 'My Trips', type: 'page', linkType: 'related' },
+        { name: 'Support', type: 'page' }
+      ]
     }
   }), []);
 
@@ -646,24 +780,37 @@ function IAFlowchart() {
     // Set node positions directly from tree layout
     node
       .attr('opacity', 0)
-      .attr('transform', d => `translate(${d.x}, ${d.y}) scale(0.5)`)
+      .attr('transform', d => `translate(${d.x}, ${d.y}) scale(0.7)`)
       .transition()
       .duration(500)
       .attr('opacity', 1)
       .attr('transform', d => `translate(${d.x}, ${d.y}) scale(1)`);
 
-    node.append('path')
-      .attr('d', getNodePath)
+    node.append('rect')
+      .attr('x', d => {
+        if (d.type === 'decision') return -70;
+        if (d.type === 'action') return -80;
+        return -90;
+      })
+      .attr('y', d => -25)
+      .attr('width', d => {
+        if (d.type === 'decision') return 140;
+        if (d.type === 'action') return 160;
+        return 180;
+      })
+      .attr('height', 50)
+      .attr('rx', d => (d.type === 'decision' ? 0 : 15))
+      .attr('ry', d => (d.type === 'decision' ? 0 : 15))
       .attr('fill', d => {
         switch (d.type) {
-          case 'page': return '#dbeafe';
-          case 'action': return '#dcfce7';
-          case 'decision': return '#fed7aa';
-          default: return '#f8fafc';
+          case 'page': return '#e0e7ff'; // lighter blue
+          case 'action': return '#d1fae5'; // lighter green
+          case 'decision': return '#fed7aa'; // orange
+          default: return '#f3f4f6'; // light gray
         }
       })
-      .attr('stroke', d => selectedNodeName === d.name ? '#3b82f6' : colors[d.depth % colors.length])
-      .attr('stroke-width', d => selectedNodeName === d.name ? 4 : 2.5)
+      .attr('stroke', d => selectedNodeName === d.name ? '#2563eb' : colors[d.depth % colors.length])
+      .attr('stroke-width', d => selectedNodeName === d.name ? 4 : 2)
       .attr('filter', 'url(#shadow)');
 
     node.each(function(d) {
@@ -671,9 +818,9 @@ function IAFlowchart() {
       if (d.id === editingNodeId) {
         const foreignObject = group.append('foreignObject')
           .attr('x', -80)
-          .attr('y', -30)
+          .attr('y', -25)
           .attr('width', 160)
-          .attr('height', 60);
+          .attr('height', 50);
 
         foreignObject.append('xhtml:input')
           .attr('type', 'text')
@@ -682,9 +829,9 @@ function IAFlowchart() {
           .style('height', '100%')
           .style('border', 'none')
           .style('outline', 'none')
-          .style('font-size', '14px')
+          .style('font-size', '16px')
           .style('font-family', 'Inter, system-ui, sans-serif')
-          .style('font-weight', 'bold')
+          .style('font-weight', '600')
           .style('text-align', 'center')
           .style('display', 'flex')
           .style('align-items', 'center')
@@ -706,14 +853,40 @@ function IAFlowchart() {
           .attr('x', 0)
           .attr('y', 0)
           .attr('dy', '.35em')
-          .attr('font-size', '14px')
+          .attr('font-size', '16px')
           .attr('font-family', 'Inter, system-ui, sans-serif')
-          .attr('font-weight', 'bold')
-          .attr('fill', '#1f2937')
+          .attr('font-weight', '600')
+          .attr('fill', '#1e293b')
           .text(d => d.name)
-          .style('pointer-events', 'none');
+          .style('pointer-events', 'none')
+          .call(wrapText, 160);
       }
     });
+
+  // Helper function to wrap text inside nodes
+  function wrapText(text, width) {
+    text.each(function() {
+      const text = d3.select(this);
+      const words = text.text().split(/\s+/).reverse();
+      let word;
+      let line = [];
+      let lineNumber = 0;
+      const lineHeight = 1.1; // ems
+      const y = text.attr('y');
+      const dy = 0;
+      let tspan = text.text(null).append('tspan').attr('x', 0).attr('y', y).attr('dy', dy + 'em');
+      while (word = words.pop()) {
+        line.push(word);
+        tspan.text(line.join(' '));
+        if (tspan.node().getComputedTextLength() > width) {
+          line.pop();
+          tspan.text(line.join(' '));
+          line = [word];
+          tspan = text.append('tspan').attr('x', 0).attr('y', y).attr('dy', ++lineNumber * lineHeight + dy + 'em').text(word);
+        }
+      }
+    });
+  }
 
     function linkArc(d) {
       const source = d.source;
@@ -796,21 +969,20 @@ function IAFlowchart() {
         </div>
         <div className="flex flex-col items-end space-y-2">
           <div className="flex items-center space-x-2">
-            <input
-              type="text"
+            {/* Replace text input with dropdown for keyword selection */}
+            <select
               value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
+              onChange={(e) => { setInputText(e.target.value); if (e.target.value) generateIA(); }}
               disabled={loading}
               className="w-64 px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm placeholder-gray-500"
-              placeholder="Enter a keyword, e.g., 'e-commerce'"
-            />
-            <button
-              onClick={generateIA}
-              disabled={loading}
-              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
             >
-              Generate 
-            </button>
+              <option value="">Select a keyword</option>
+              {Object.keys(templates).map((key) => (
+                <option key={key} value={key}>
+                  {templates[key].name} ({key})
+                </option>
+              ))}
+            </select>
             {/* Referent feature */}
             <button
               onClick={() => navigate('/referent')}
