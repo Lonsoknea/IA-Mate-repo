@@ -11,11 +11,12 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-const JWT_SECRET = 'your-secret-key'; // In production, use environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Use environment variable
 const USERS_FILE = path.join(__dirname, 'users.json');
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/ia-mate', { useNewUrlParser: true, useUnifiedTopology: true })
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ia-mate';
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
 
