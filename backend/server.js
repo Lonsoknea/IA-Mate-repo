@@ -9,6 +9,7 @@ const path = require('path');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use('/uploads', express.static('uploads'));
 
 const JWT_SECRET = 'your-secret-key'; // In production, use environment variable
 const USERS_FILE = path.join(__dirname, 'users.json');
@@ -126,7 +127,7 @@ const authenticateToken = (req, res, next) => {
 
 // Authentication routes
 app.post('/register', async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, name, username, phone } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
@@ -138,11 +139,11 @@ app.post('/register', async (req, res) => {
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = { id: Date.now(), email, password: hashedPassword };
+  const newUser = { id: Date.now(), email, password: hashedPassword, name: name || '', username: username || '', phone: phone || '', picture: '' };
   users.push(newUser);
   writeUsers(users);
 
-  const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET);
+  const token = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name, username: newUser.username, phone: newUser.phone }, JWT_SECRET);
   res.json({ token });
 });
 
@@ -167,9 +168,87 @@ app.post('/logout', authenticateToken, (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
+app.get('/users/:id', authenticateToken, (req, res) => {
+  const userId = parseInt(req.params.id);
+  if (req.user.id !== userId) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  const users = readUsers();
+  const user = users.find(u => u.id === userId);
+  if (!user) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  res.json(user);
+});
+
+app.put('/users/:id', authenticateToken, (req, res) => {
+  const userId = parseInt(req.params.id);
+  if (req.user.id !== userId) {
+    return res.status(403).json({ error: 'Access denied' });
+  }
+  const { name, username, phone } = req.body;
+  const users = readUsers();
+  const userIndex = users.findIndex(u => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: 'User not found' });
+  }
+  users[userIndex].name = name || users[userIndex].name;
+  users[userIndex].username = username || users[userIndex].username;
+  users[userIndex].phone = phone || users[userIndex].phone;
+  writeUsers(users);
+  res.json({ message: 'User updated successfully' });
+});
+
 // Removed OAuth routes as per user request
 
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
+
 const PORT = 3003;
+
+app.post('/user/profile-picture', authenticateToken, upload.single('picture'), (req, res) => {
+  try {
+    const userId = req.user.id;
+    const users = readUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+    // Save the file path relative to server
+    const picturePath = `/uploads/${req.file.filename}`;
+    users[userIndex].picture = picturePath;
+    writeUsers(users);
+    res.json({ message: 'Profile picture updated', picture: picturePath });
+  } catch (error) {
+    console.error('Error updating profile picture:', error);
+    res.status(500).json({ error: 'Failed to update profile picture' });
+  }
+});
+
+app.delete('/user/profile-picture', authenticateToken, (req, res) => {
+  try {
+    const userId = req.user.id;
+    const users = readUsers();
+    const userIndex = users.findIndex(u => u.id === userId);
+    if (userIndex === -1) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const picturePath = users[userIndex].picture;
+    if (!picturePath) {
+      return res.status(400).json({ error: 'No profile picture to delete' });
+    }
+    // Remove picture path from user data
+    users[userIndex].picture = '';
+    writeUsers(users);
+    res.json({ message: 'Profile picture deleted' });
+  } catch (error) {
+    console.error('Error deleting profile picture:', error);
+    res.status(500).json({ error: 'Failed to delete profile picture' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
