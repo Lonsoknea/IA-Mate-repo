@@ -1,10 +1,17 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
+
+const JWT_SECRET = 'your-secret-key'; // In production, use environment variable
+const USERS_FILE = path.join(__dirname, 'users.json');
 
 // Connect to MongoDB
 mongoose.connect('mongodb://localhost:27017/ia-mate', { useNewUrlParser: true, useUnifiedTopology: true })
@@ -89,6 +96,78 @@ app.post('/ai', async (req, res) => {
     res.status(500).json({ error: 'Failed to get AI response' });
   }
 });
+
+// Helper functions for user management
+const readUsers = () => {
+  try {
+    const data = fs.readFileSync(USERS_FILE, 'utf8');
+    return JSON.parse(data);
+  } catch (err) {
+    return [];
+  }
+};
+
+const writeUsers = (users) => {
+  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+};
+
+// Middleware to verify JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'Access token required' });
+
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+};
+
+// Authentication routes
+app.post('/register', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  const users = readUsers();
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({ error: 'User already exists' });
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const newUser = { id: Date.now(), email, password: hashedPassword };
+  users.push(newUser);
+  writeUsers(users);
+
+  const token = jwt.sign({ id: newUser.id, email: newUser.email }, JWT_SECRET);
+  res.json({ token });
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password required' });
+  }
+
+  const users = readUsers();
+  const user = users.find(u => u.email === email);
+  if (!user || !(await bcrypt.compare(password, user.password))) {
+    return res.status(401).json({ error: 'Invalid credentials' });
+  }
+
+  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET);
+  res.json({ token });
+});
+
+app.post('/logout', authenticateToken, (req, res) => {
+  // In a real app, you might blacklist the token, but for simplicity, just respond
+  res.json({ message: 'Logged out successfully' });
+});
+
+// Removed OAuth routes as per user request
 
 const PORT = 3003;
 

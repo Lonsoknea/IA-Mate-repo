@@ -12,12 +12,21 @@ function HomePage() {
               <h1 className="text-2xl font-bold text-gray-900">IA Mate</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Link
-                to="/app"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-              >
-                Launch App
-              </Link>
+              {localStorage.getItem('token') ? (
+                <Link
+                  to="/profile"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  Profile
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                >
+                  Login
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -43,9 +52,6 @@ function HomePage() {
             >
               Get Started
             </Link>
-            <button className="px-8 py-4 border-2 border-gray-300 text-gray-700 text-lg font-semibold rounded-lg hover:border-gray-400 transition-colors duration-200">
-              Learn More
-            </button>
           </div>
         </div>
       </section>
@@ -57,7 +63,17 @@ function HomePage() {
             Powerful Features
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div
+              onClick={() => window.location.href = '/app'}
+              className="cursor-pointer bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  window.location.href = '/app';
+                }
+              }}
+            >
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -68,7 +84,17 @@ function HomePage() {
                 Generate complete information architectures from simple keywords like "e-commerce" or "blog".
               </p>
             </div>
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div
+              onClick={() => window.location.href = '/app'}
+              className="cursor-pointer bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  window.location.href = '/app';
+                }
+              }}
+            >
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
@@ -79,7 +105,17 @@ function HomePage() {
                 Import your own JSON data to visualize custom information architectures and flowcharts.
               </p>
             </div>
-            <div className="bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200">
+            <div
+              onClick={() => window.location.href = '/app'}
+              className="cursor-pointer bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200"
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  window.location.href = '/app';
+                }
+              }}
+            >
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-4l-4 4-4-4z" />
