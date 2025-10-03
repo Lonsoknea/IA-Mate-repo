@@ -1,4 +1,4 @@
-  import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
 
 function App() {
@@ -17,6 +17,8 @@ function App() {
   // Store conversation history as array of { sender: 'user' | 'ai', message: string }
   const [conversation, setConversation] = useState([]);
   const [aiLoading, setAiLoading] = useState(false);
+
+  // Removed aiResponse and setAiResponse state
   const [showHistory, setShowHistory] = useState(false);
   // Removed aiResponse and setAiResponse state
   const [legendPosition, setLegendPosition] = useState({ x: 80, y: 200 });
@@ -898,6 +900,19 @@ function App() {
                 return parts;
               };
 
+              // Function to render text with clickable links
+              const renderTextWithLinks = (text) => {
+                const urlRegex = /(https?:\/\/[^\s]+)/g;
+                const parts = text.split(urlRegex);
+                return parts.map((part, index) => {
+                  if (urlRegex.test(part)) {
+                    return <a key={index} href={part} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">{part}</a>;
+                  } else {
+                    return <span key={index}>{part}</span>;
+                  }
+                });
+              };
+
               // Render code block UI
               const CodeBlock = ({ lang, content }) => {
                 const copyCode = () => {
@@ -943,7 +958,7 @@ function App() {
                           if (part.type === 'code') {
                             return <CodeBlock key={i} lang={part.lang} content={part.content} />;
                           } else {
-                            return <span key={i}>{part.content}</span>;
+                            return renderTextWithLinks(part.content);
                           }
                         })}
                         <button

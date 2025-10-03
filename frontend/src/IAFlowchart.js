@@ -15,11 +15,6 @@ function IAFlowchart() {
   const [height, setHeight] = useState(600);
   const [selectedNodeName, setSelectedNodeName] = useState(null);
   const [inputText, setInputText] = useState('');
-  const [aiPrompt, setAiPrompt] = useState('');
-  // Store conversation history as array of { sender: 'user' | 'ai', message: string }
-  const [conversation, setConversation] = useState([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [showHistory, setShowHistory] = useState(false);
   // Removed aiResponse and setAiResponse state
   const [legendPosition, setLegendPosition] = useState({ x: 80, y: 200 });
   const [isDraggingLegend, setIsDraggingLegend] = useState(false);
@@ -28,21 +23,7 @@ function IAFlowchart() {
   const zoomRef = useRef();
   const gRef = useRef();
 
-  const conversationEndRef = useRef(null);
 
-  useEffect(() => {
-    if (conversationEndRef.current) {
-      conversationEndRef.current.scrollTop = conversationEndRef.current.scrollHeight;
-    }
-  }, [conversation]);
-
-  useEffect(() => {
-    // Load conversations from DB on mount
-    fetch('http://localhost:3003/conversations')
-      .then(res => res.json())
-      .then(data => setConversation(data.messages || []))
-      .catch(err => console.error('Failed to load conversations', err));
-  }, []);
 
   const templates = useMemo(() => ({
     'e-commerce': {
@@ -1263,6 +1244,13 @@ function IAFlowchart() {
             >
               Referent
             </button>
+            <button
+              onClick={() => navigate('/ai-chat')}
+              disabled={loading}
+              className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
+            >
+              AI Chat
+            </button>
           </div>
         </div>
       </div>
@@ -1327,195 +1315,7 @@ function IAFlowchart() {
             </div>
           </div>
         </div>
-        {/* AI Box */}
-        <div className="absolute top-0 right-0 h-full w-1/4 bg-white shadow-lg border-l border-gray-200 z-10 flex flex-col p-4 backdrop-blur-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">AI Box</h3>
-          <div ref={conversationEndRef} className="flex flex-col flex-1 overflow-y-auto mb-4 border border-gray-300 bg-white p-2 space-y-2 rounded-md">
-            {conversation.map((entry, index) => {
-              // Function to parse code blocks in message
-              const parseCodeBlocks = (text) => {
-                const regex = /```(\w+)?\n([\s\S]*?)```/g;
-                const parts = [];
-                let lastIndex = 0;
-                let match;
-                while ((match = regex.exec(text)) !== null) {
-                  if (match.index > lastIndex) {
-                    parts.push({ type: 'text', content: text.substring(lastIndex, match.index) });
-                  }
-                  parts.push({ type: 'code', lang: match[1] || '', content: match[2] });
-                  lastIndex = regex.lastIndex;
-                }
-                if (lastIndex < text.length) {
-                  parts.push({ type: 'text', content: text.substring(lastIndex) });
-                }
-                return parts;
-              };
 
-              // Render code block UI
-              const CodeBlock = ({ lang, content }) => {
-                const copyCode = () => {
-                  navigator.clipboard.writeText(content);
-                };
-                return (
-                  <div className="relative bg-gray-900 text-gray-100 rounded-md p-4 font-mono text-sm overflow-auto my-2">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-semibold">{lang || 'code'}</span>
-                      <button
-                        onClick={copyCode}
-                        className="text-gray-400 hover:text-white text-xs flex items-center space-x-1"
-                        aria-label="Copy code"
-                        title="Copy code"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                          <rect x="8" y="8" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
-                          <rect x="4" y="4" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                        <span>Copy code</span>
-                      </button>
-                    </div>
-                    <pre className="whitespace-pre-wrap">{content}</pre>
-                  </div>
-                );
-              };
-
-              if (entry.sender === 'ai') {
-                // Remove ** signs from AI message
-                const cleanedMessage = entry.message.replace(/\*\*/g, '');
-                // Replace specific text pattern in AI message
-                const modifiedMessage = cleanedMessage.replace(
-                  /Python is a popular and powerful computer programming language\./g,
-                  'Python is a " popular and powerful computer programming language" .'
-                );
-                const parts = parseCodeBlocks(modifiedMessage);
-                return (
-                  <div
-                    key={index}
-                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-start bg-gray-300 text-gray-900 flex flex-col"
-                  >
-                    {parts.map((part, i) => {
-                      if (part.type === 'code') {
-                        return <CodeBlock key={i} lang={part.lang} content={part.content} />;
-                      } else {
-                        return <span key={i}>{part.content}</span>;
-                      }
-                    })}
-                    <button
-                      onClick={() => navigator.clipboard.writeText(modifiedMessage)}
-                      className="self-start mt-2 flex items-center space-x-1 text-gray-600 hover:text-gray-900 text-xs"
-                      aria-label="Copy AI answer"
-                      title="Copy AI answer"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="w-4 h-4">
-                        <rect x="8" y="8" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
-                        <rect x="4" y="4" width="12" height="12" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      <span>Copy</span>
-                    </button>
-                  </div>
-                );
-              } else {
-                return (
-                  <div
-                    key={index}
-                    className="max-w-full break-words rounded-lg px-4 py-2 whitespace-pre-wrap self-end bg-blue-500 text-white"
-                  >
-                    <span>{entry.message}</span>
-                  </div>
-                );
-              }
-            })}
-
-          </div>
-          <button onClick={() => setShowHistory(!showHistory)} className="mb-2 px-4 py-2 bg-gray-500 text-white rounded">View History</button>
-          {showHistory && (
-            <div className="mb-4">
-              <h4>History</h4>
-              <ul>
-                {conversation.filter(c => c.sender === 'user').map((c, i) => <li key={i}>{c.message}</li>)}
-              </ul>
-            </div>
-          )}
-          <div className="relative w-full rounded border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 flex items-center">
-            <input
-              type="text"
-              value={aiPrompt}
-              onChange={(e) => setAiPrompt(e.target.value)}
-              className="flex-grow p-3 focus:outline-none pr-12 bg-transparent rounded-l text-gray-700"
-              placeholder="Send a message"
-              disabled={aiLoading}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !aiLoading) {
-                  e.preventDefault();
-                  if (!aiPrompt.trim()) {
-                    setError('Please enter a prompt for AI.');
-                    return;
-                  }
-                  setAiLoading(true);
-                  setError('');
-                  // Add user message to conversation (append to bottom)
-                  setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
-                  fetch('http://localhost:3003/ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: aiPrompt }),
-                  })
-                    .then(response => {
-                      if (!response.ok) {
-                        throw new Error('Failed to get AI response');
-                      }
-                      return response.json();
-                    })
-                    .then(data => {
-                      // Add AI response to conversation (append to bottom)
-                      setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
-                      setAiPrompt(''); // Clear input after sending
-                    })
-                    .catch(() => {
-                      setError('Error fetching AI response.');
-                    })
-                    .finally(() => {
-                      setAiLoading(false);
-                    });
-                }
-              }}
-            />
-            <button
-              onClick={async () => {
-                if (!aiPrompt.trim()) {
-                  setError('Please enter a prompt for AI.');
-                  return;
-                }
-                setAiLoading(true);
-                setError('');
-                // Add user message to conversation (append to bottom)
-                setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
-                try {
-                  const response = await fetch('http://localhost:3003/ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: aiPrompt }),
-                  });
-                  if (!response.ok) {
-                    throw new Error('Failed to get AI response');
-                  }
-                  const data = await response.json();
-                  // Add AI response to conversation (append to bottom)
-                  setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
-                  setAiPrompt(''); // Clear input after sending
-                } catch (err) {
-                  setError('Error fetching AI response.');
-                } finally {
-                  setAiLoading(false);
-                }
-              }}
-              disabled={aiLoading}
-              className="p-3 text-gray-600 rounded-r hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"
-              aria-label="Send to AI"
-            >
-              {aiLoading ? '⏳' : '➤'}
-            </button>
-          </div>
-        </div>
       </div>
     </div>
   );
