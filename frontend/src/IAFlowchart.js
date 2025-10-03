@@ -49,286 +49,557 @@ function IAFlowchart() {
       name: 'E-commerce Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Landing page with featured products and promotions' },
         {
           name: 'Browse Products',
           type: 'action',
+          description: 'User browses product categories and lists',
           children: [
-            { name: 'Product Details', type: 'page' }
+            { name: 'Product Details', type: 'page', description: 'Detailed view of a selected product with images, specs, and reviews' }
           ]
         },
-        { name: 'Shopping Cart', type: 'page' },
+        { name: 'Shopping Cart', type: 'page', description: 'View and manage products added to cart' },
         {
           name: 'Checkout',
           type: 'action',
-          label: 'Proceed to payment'
+          label: 'Proceed to payment',
+          description: 'User enters shipping and billing information'
         },
         {
           name: 'Login Required?',
           type: 'decision',
+          description: 'Check if user is logged in before checkout',
           children: [
-            { name: 'Login', type: 'action', label: 'User authentication' },
-            { name: 'Guest Checkout', type: 'page', linkType: 'related', label: 'Alternative path' }
+            {
+              name: 'Authentication Page',
+              type: 'page',
+              description: 'User authentication flow',
+              children: [
+                {
+                  name: 'Sign Up',
+                  type: 'action',
+                  children: [
+                    { name: 'Input Personal Info', type: 'action', description: 'User inputs personal information' },
+                    { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                    { name: 'OTP Verified', type: 'decision', children: [
+                      { name: 'Home Page', type: 'page', description: 'User redirected after successful sign up' }
+                    ] }
+                  ]
+                },
+                {
+                  name: 'Sign Up with Google',
+                  type: 'action',
+                  description: 'User signs up using Google OAuth',
+                  children: [
+                    { name: 'Home Page', type: 'page', description: 'User redirected after successful Google sign up' }
+                  ]
+                },
+                {
+                  name: 'Login',
+                  type: 'action',
+                  children: [
+                    { name: 'Enter Email and Password', type: 'action', description: 'User enters login credentials' },
+                    { name: 'Login Success', type: 'decision', children: [
+                      { name: 'Home Page', type: 'page', description: 'User redirected after successful login' }
+                    ] },
+                    { name: 'Forget Password', type: 'action', children: [
+                      { name: 'Enter Email', type: 'action', description: 'User enters email for password reset' },
+                      { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                      { name: 'OTP Verified', type: 'decision', children: [
+                        { name: 'Set New Password', type: 'action', description: 'User sets a new password' },
+                        { name: 'Home Page', type: 'page', description: 'User redirected after password reset' }
+                      ] }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            { name: 'Guest Checkout', type: 'page', linkType: 'related', label: 'Alternative path', description: 'Checkout without account' }
           ]
         },
         {
           name: 'Payment Method',
           type: 'decision',
+          description: 'User selects payment method',
           children: [
-            { name: 'Credit Card', type: 'page', label: 'Choose Card' },
-            { name: 'PayPal', type: 'action', label: 'Redirect to PayPal' }
+            { name: 'Credit Card', type: 'page', label: 'Choose Card', description: 'Enter credit card details securely' },
+            { name: 'PayPal', type: 'action', label: 'Redirect to PayPal', description: 'Redirect to PayPal for payment authorization' }
           ]
         },
-        { name: 'Order Confirmation', type: 'page' },
-        { name: 'User Profile', type: 'page', linkType: 'related' }
+        { name: 'Order Confirmation', type: 'page', description: 'Order summary and confirmation details' },
+        { name: 'User Profile', type: 'page', linkType: 'related', description: 'User account management and order history' }
       ]
     },
     'portfolio': {
       name: 'Portfolio Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
-        { name: 'About Me', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Introduction and overview' },
+        { name: 'About Me', type: 'page', description: 'Personal bio and background' },
         {
           name: 'Projects',
           type: 'page',
+          description: 'Showcase of projects with details',
           children: [
-            { name: 'Project 1', type: 'page' },
-            { name: 'Project 2', type: 'page' }
+            { name: 'Project 1', type: 'page', description: 'Details and media for project 1' },
+            { name: 'Project 2', type: 'page', description: 'Details and media for project 2' }
           ]
         },
-        { name: 'Contact', type: 'page' },
-        { name: 'Blog', type: 'page', linkType: 'related' }
+        { name: 'Contact', type: 'page', description: 'Contact form and social links' },
+        { name: 'Blog', type: 'page', linkType: 'related', description: 'Articles and updates' },
+        {
+          name: 'Admin Login Required?',
+          type: 'decision',
+          description: 'Check if admin is logged in for editing',
+          children: [
+            {
+              name: 'Authentication Page',
+              type: 'page',
+              description: 'Admin authentication flow',
+              children: [
+                {
+                  name: 'Sign Up',
+                  type: 'action',
+                  children: [
+                    { name: 'Input Personal Info', type: 'action', description: 'User inputs personal information' },
+                    { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                    { name: 'OTP Verified', type: 'decision', children: [
+                      { name: 'Admin Dashboard', type: 'page', description: 'User redirected after successful sign up' }
+                    ] }
+                  ]
+                },
+                {
+                  name: 'Sign Up with Google',
+                  type: 'action',
+                  description: 'User signs up using Google OAuth',
+                  children: [
+                    { name: 'Admin Dashboard', type: 'page', description: 'User redirected after successful Google sign up' }
+                  ]
+                },
+                {
+                  name: 'Login',
+                  type: 'action',
+                  children: [
+                    { name: 'Enter Email and Password', type: 'action', description: 'User enters login credentials' },
+                    { name: 'Login Success', type: 'decision', children: [
+                      { name: 'Admin Dashboard', type: 'page', description: 'User redirected after successful login' }
+                    ] },
+                    { name: 'Forget Password', type: 'action', children: [
+                      { name: 'Enter Email', type: 'action', description: 'User enters email for password reset' },
+                      { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                      { name: 'OTP Verified', type: 'decision', children: [
+                        { name: 'Set New Password', type: 'action', description: 'User sets a new password' },
+                        { name: 'Admin Dashboard', type: 'page', description: 'User redirected after password reset' }
+                      ] }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            { name: 'Public View', type: 'page', linkType: 'related', label: 'Alternative path', description: 'View portfolio without login' }
+          ]
+        }
       ]
     },
     'blog': {
       name: 'Blog Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Latest posts and featured content' },
         {
           name: 'Posts List',
           type: 'page',
+          description: 'List of blog posts',
           children: [
-            { name: 'Single Post', type: 'page' }
+            { name: 'Single Post', type: 'page', description: 'Full content of a single blog post' }
           ]
         },
         {
           name: 'Categories',
           type: 'decision',
+          description: 'Filter posts by category',
           children: [
-            { name: 'Technology', type: 'page' },
-            { name: 'Design', type: 'page' },
-            { name: 'Lifestyle', type: 'page' }
+            { name: 'Technology', type: 'page', description: 'Posts about technology' },
+            { name: 'Design', type: 'page', description: 'Posts about design' },
+            { name: 'Lifestyle', type: 'page', description: 'Posts about lifestyle' }
           ]
         },
-        { name: 'About', type: 'page' },
-        { name: 'Comments Section', type: 'action', linkType: 'related' }
+        { name: 'About', type: 'page', description: 'About the blog and author' },
+        {
+          name: 'Login Required?',
+          type: 'decision',
+          description: 'Check if user is logged in for commenting',
+          children: [
+            {
+              name: 'Authentication Page',
+              type: 'page',
+              description: 'User authentication flow',
+              children: [
+                {
+                  name: 'Sign Up',
+                  type: 'action',
+                  children: [
+                    { name: 'Input Personal Info', type: 'action', description: 'User inputs personal information' },
+                    { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                    { name: 'OTP Verified', type: 'decision', children: [
+                      { name: 'Comments Section', type: 'action', description: 'User redirected after successful sign up to comment' }
+                    ] }
+                  ]
+                },
+                {
+                  name: 'Sign Up with Google',
+                  type: 'action',
+                  description: 'User signs up using Google OAuth',
+                  children: [
+                    { name: 'Comments Section', type: 'action', description: 'User redirected after successful Google sign up to comment' }
+                  ]
+                },
+                {
+                  name: 'Login',
+                  type: 'action',
+                  children: [
+                    { name: 'Enter Email and Password', type: 'action', description: 'User enters login credentials' },
+                    { name: 'Login Success', type: 'decision', children: [
+                      { name: 'Comments Section', type: 'action', description: 'User redirected after successful login to comment' }
+                    ] },
+                    { name: 'Forget Password', type: 'action', children: [
+                      { name: 'Enter Email', type: 'action', description: 'User enters email for password reset' },
+                      { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                      { name: 'OTP Verified', type: 'decision', children: [
+                        { name: 'Set New Password', type: 'action', description: 'User sets a new password' },
+                        { name: 'Comments Section', type: 'action', description: 'User redirected after password reset to comment' }
+                      ] }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            { name: 'Guest Comments', type: 'action', linkType: 'related', label: 'Alternative path', description: 'Comment without account' }
+          ]
+        }
       ]
     },
     'restaurant': {
       name: 'Restaurant Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
-        { name: 'Menu', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Welcome and featured dishes' },
+        { name: 'Menu', type: 'page', description: 'Full menu with categories' },
         {
           name: 'Browse Dishes',
           type: 'action',
+          description: 'User browses dishes by category',
           children: [
-            { name: 'Dish Details', type: 'page' }
+            { name: 'Dish Details', type: 'page', description: 'Details and ingredients of a dish' }
+          ]
+        },
+        {
+          name: 'Login Required?',
+          type: 'decision',
+          description: 'Check if user is logged in before ordering',
+          children: [
+            {
+              name: 'Authentication Page',
+              type: 'page',
+              description: 'User authentication flow',
+              children: [
+                {
+                  name: 'Sign Up',
+                  type: 'action',
+                  children: [
+                    { name: 'Input Personal Info', type: 'action', description: 'User inputs personal information' },
+                    { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                    { name: 'OTP Verified', type: 'decision', children: [
+                      { name: 'Order Online', type: 'decision', description: 'Choose order type after sign up' }
+                    ] }
+                  ]
+                },
+                {
+                  name: 'Sign Up with Google',
+                  type: 'action',
+                  description: 'User signs up using Google OAuth',
+                  children: [
+                    { name: 'Order Online', type: 'decision', description: 'Choose order type after Google sign up' }
+                  ]
+                },
+                {
+                  name: 'Login',
+                  type: 'action',
+                  children: [
+                    { name: 'Enter Email and Password', type: 'action', description: 'User enters login credentials' },
+                    { name: 'Login Success', type: 'decision', children: [
+                      { name: 'Order Online', type: 'decision', description: 'Choose order type after login' }
+                    ] },
+                    { name: 'Forget Password', type: 'action', children: [
+                      { name: 'Enter Email', type: 'action', description: 'User enters email for password reset' },
+                      { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                      { name: 'OTP Verified', type: 'decision', children: [
+                        { name: 'Set New Password', type: 'action', description: 'User sets a new password' },
+                        { name: 'Order Online', type: 'decision', description: 'Choose order type after password reset' }
+                      ] }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            { name: 'Order as Guest', type: 'decision', linkType: 'related', label: 'Alternative path', description: 'Order without account' }
           ]
         },
         {
           name: 'Order Online',
           type: 'decision',
+          description: 'Choose order type',
           children: [
-            { name: 'Dine In', type: 'page', label: 'Reserve table' },
-            { name: 'Takeaway', type: 'action', label: 'Quick order' }
+            { name: 'Dine In', type: 'page', label: 'Reserve table', description: 'Table reservation system' },
+            { name: 'Takeaway', type: 'action', label: 'Quick order', description: 'Order for pickup or delivery' }
           ]
         },
-        { name: 'Reservations', type: 'page' },
-        { name: 'Contact', type: 'page', linkType: 'related' },
-        { name: 'Reviews', type: 'page' }
+        { name: 'Reservations', type: 'page', description: 'Manage reservations' },
+        { name: 'Contact', type: 'page', linkType: 'related', description: 'Contact information and form' },
+        { name: 'Reviews', type: 'page', description: 'Customer reviews and ratings' }
       ]
     },
     'university': {
       name: 'University Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
+        { name: 'Home', type: 'page', description: 'University overview and news' },
         {
           name: 'Admissions',
           type: 'decision',
+          description: 'Admission process options',
           children: [
-            { name: 'Apply Online', type: 'action' },
-            { name: 'Visit Campus', type: 'page', linkType: 'related' }
+            { name: 'Apply Online', type: 'action', description: 'Online application form' },
+            { name: 'Visit Campus', type: 'page', linkType: 'related', description: 'Campus visit scheduling' }
           ]
         },
-        { name: 'Courses', type: 'page' },
+        { name: 'Courses', type: 'page', description: 'Course catalog and details' },
         {
           name: 'Enroll',
           type: 'action',
+          description: 'Enrollment process',
           children: [
-            { name: 'Course Details', type: 'page' }
+            { name: 'Course Details', type: 'page', description: 'Detailed course information' }
           ]
         },
-        { name: 'Library', type: 'page' },
-        { name: 'Resources', type: 'page', linkType: 'related' },
-        { name: 'Contact', type: 'page' }
+        { name: 'Library', type: 'page', description: 'Library resources and search' },
+        { name: 'Resources', type: 'page', linkType: 'related', description: 'Student resources and support' },
+        { name: 'Contact', type: 'page', description: 'Contact information' }
       ]
     },
     'banking app': {
       name: 'Banking App',
       type: 'page',
       children: [
-        { name: 'Login', type: 'action' },
-        { name: 'Dashboard', type: 'page' },
+        {
+          name: 'Login Required?',
+          type: 'decision',
+          description: 'Check if user is logged in before accessing dashboard',
+          children: [
+            {
+              name: 'Authentication Page',
+              type: 'page',
+              description: 'User authentication flow',
+              children: [
+                {
+                  name: 'Sign Up',
+                  type: 'action',
+                  children: [
+                    { name: 'Input Personal Info', type: 'action', description: 'User inputs personal information' },
+                    { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                    { name: 'OTP Verified', type: 'decision', children: [
+                      { name: 'Dashboard', type: 'page', description: 'User redirected after successful sign up' }
+                    ] }
+                  ]
+                },
+                {
+                  name: 'Sign Up with Google',
+                  type: 'action',
+                  description: 'User signs up using Google OAuth',
+                  children: [
+                    { name: 'Dashboard', type: 'page', description: 'User redirected after successful Google sign up' }
+                  ]
+                },
+                {
+                  name: 'Login',
+                  type: 'action',
+                  children: [
+                    { name: 'Enter Email and Password', type: 'action', description: 'User enters login credentials' },
+                    { name: 'Login Success', type: 'decision', children: [
+                      { name: 'Dashboard', type: 'page', description: 'User redirected after successful login' }
+                    ] },
+                    { name: 'Forget Password', type: 'action', children: [
+                      { name: 'Enter Email', type: 'action', description: 'User enters email for password reset' },
+                      { name: 'Enter OTP Code', type: 'action', description: 'User enters OTP code for verification' },
+                      { name: 'OTP Verified', type: 'decision', children: [
+                        { name: 'Set New Password', type: 'action', description: 'User sets a new password' },
+                        { name: 'Dashboard', type: 'page', description: 'User redirected after password reset' }
+                      ] }
+                    ] }
+                  ]
+                }
+              ]
+            },
+            { name: 'Guest Access', type: 'page', linkType: 'related', label: 'Alternative path', description: 'Access without login' }
+          ]
+        },
+        { name: 'Dashboard', type: 'page', description: 'Account overview and summary' },
         {
           name: 'Transfer Funds',
           type: 'decision',
+          description: 'Choose transfer type',
           children: [
-            { name: 'Internal Transfer', type: 'action' },
-            { name: 'External Transfer', type: 'page', label: 'To other banks' }
+            { name: 'Internal Transfer', type: 'action', description: 'Transfer between user accounts' },
+            { name: 'External Transfer', type: 'page', label: 'To other banks', description: 'Transfer to external accounts' }
           ]
         },
-        { name: 'Account Details', type: 'page' },
-        { name: 'Support', type: 'page', linkType: 'related' },
-        { name: 'Transactions', type: 'page' }
+        { name: 'Account Details', type: 'page', description: 'Detailed account information' },
+        { name: 'Support', type: 'page', linkType: 'related', description: 'Customer support and FAQs' },
+        { name: 'Transactions', type: 'page', description: 'Transaction history and statements' }
       ]
     },
     'social media': {
       name: 'Social Media Platform',
       type: 'page',
       children: [
-        { name: 'Login', type: 'action' },
-        { name: 'Feed', type: 'page' },
+        { name: 'Login', type: 'action', description: 'User login and registration' },
+        { name: 'Feed', type: 'page', description: 'User posts and updates' },
         {
           name: 'Create Post',
           type: 'action',
+          description: 'Post creation workflow',
           children: [
-            { name: 'Add Media', type: 'page' },
-            { name: 'Post Options', type: 'decision' }
+            { name: 'Add Media', type: 'page', description: 'Upload images or videos' },
+            { name: 'Post Options', type: 'decision', description: 'Privacy and tagging options' }
           ]
         },
-        { name: 'Profile', type: 'page' },
+        { name: 'Profile', type: 'page', description: 'User profile and settings' },
         {
           name: 'Notifications',
           type: 'page',
+          description: 'User notifications',
           children: [
-            { name: 'Likes', type: 'action' },
-            { name: 'Comments', type: 'action' }
+            { name: 'Likes', type: 'action', description: 'Likes on posts' },
+            { name: 'Comments', type: 'action', description: 'Comments on posts' }
           ]
         },
-        { name: 'Messages', type: 'page', linkType: 'related' },
-        { name: 'Settings', type: 'page' }
+        { name: 'Messages', type: 'page', linkType: 'related', description: 'Private messaging' },
+        { name: 'Settings', type: 'page', description: 'Account and privacy settings' }
       ]
     },
     'news website': {
       name: 'News Website',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Latest news and headlines' },
         {
           name: 'News Categories',
           type: 'decision',
+          description: 'Filter news by category',
           children: [
-            { name: 'Politics', type: 'page' },
-            { name: 'Sports', type: 'page' },
-            { name: 'Entertainment', type: 'page' }
+            { name: 'Politics', type: 'page', description: 'Political news' },
+            { name: 'Sports', type: 'page', description: 'Sports news' },
+            { name: 'Entertainment', type: 'page', description: 'Entertainment news' }
           ]
         },
         {
           name: 'Article Page',
           type: 'page',
+          description: 'Full news article',
           children: [
-            { name: 'Comments', type: 'action' },
-            { name: 'Share', type: 'action' }
+            { name: 'Comments', type: 'action', description: 'User comments on articles' },
+            { name: 'Share', type: 'action', description: 'Social sharing options' }
           ]
         },
-        { name: 'Search', type: 'action' },
-        { name: 'About', type: 'page', linkType: 'related' },
-        { name: 'Contact', type: 'page' }
+        { name: 'Search', type: 'action', description: 'Search news articles' },
+        { name: 'About', type: 'page', linkType: 'related', description: 'About the news organization' },
+        { name: 'Contact', type: 'page', description: 'Contact information' }
       ]
     },
     'learning management system': {
       name: 'Learning Management System',
       type: 'page',
       children: [
-        { name: 'Login', type: 'action' },
-        { name: 'Dashboard', type: 'page' },
+        { name: 'Login', type: 'action', description: 'User authentication' },
+        { name: 'Dashboard', type: 'page', description: 'Overview of courses and progress' },
         {
           name: 'Courses',
           type: 'page',
+          description: 'List of courses',
           children: [
-            { name: 'Course Content', type: 'page' },
-            { name: 'Assignments', type: 'action' }
+            { name: 'Course Content', type: 'page', description: 'Lessons and materials' },
+            { name: 'Assignments', type: 'action', description: 'Assignment submission and grading' }
           ]
         },
         {
           name: 'Grades',
           type: 'page',
+          description: 'View grades and feedback',
           children: [
-            { name: 'View Grades', type: 'action' },
-            { name: 'Feedback', type: 'page' }
+            { name: 'View Grades', type: 'action', description: 'Detailed grade reports' },
+            { name: 'Feedback', type: 'page', description: 'Instructor feedback' }
           ]
         },
-        { name: 'Discussion Forums', type: 'page', linkType: 'related' },
-        { name: 'Profile', type: 'page' }
+        { name: 'Discussion Forums', type: 'page', linkType: 'related', description: 'Course discussions and Q&A' },
+        { name: 'Profile', type: 'page', description: 'User profile and settings' }
       ]
     },
     'fitness app': {
       name: 'Fitness App',
       type: 'page',
       children: [
-        { name: 'Login', type: 'action' },
-        { name: 'Home Dashboard', type: 'page' },
+        { name: 'Login', type: 'action', description: 'User authentication' },
+        { name: 'Home Dashboard', type: 'page', description: 'Overview of fitness stats' },
         {
           name: 'Workouts',
           type: 'decision',
+          description: 'Workout selection and tracking',
           children: [
-            { name: 'Start Workout', type: 'action' },
-            { name: 'View History', type: 'page' }
+            { name: 'Start Workout', type: 'action', description: 'Begin a workout session' },
+            { name: 'View History', type: 'page', description: 'Past workout records' }
           ]
         },
-        { name: 'Progress Tracking', type: 'page' },
+        { name: 'Progress Tracking', type: 'page', description: 'Track fitness progress over time' },
         {
           name: 'Nutrition',
           type: 'page',
+          description: 'Diet and meal planning',
           children: [
-            { name: 'Meal Plans', type: 'action' },
-            { name: 'Calorie Counter', type: 'page' }
+            { name: 'Meal Plans', type: 'action', description: 'Create and manage meal plans' },
+            { name: 'Calorie Counter', type: 'page', description: 'Track daily calorie intake' }
           ]
         },
-        { name: 'Community', type: 'page', linkType: 'related' },
-        { name: 'Settings', type: 'page' }
+        { name: 'Community', type: 'page', linkType: 'related', description: 'Social features and groups' },
+        { name: 'Settings', type: 'page', description: 'App settings and preferences' }
       ]
     },
     'travel booking': {
       name: 'Travel Booking Site',
       type: 'page',
       children: [
-        { name: 'Home', type: 'page' },
+        { name: 'Home', type: 'page', description: 'Welcome and featured destinations' },
         {
           name: 'Search Flights/Hotels',
           type: 'action',
+          description: 'Search for flights and hotels',
           children: [
-            { name: 'Flight Results', type: 'page' },
-            { name: 'Hotel Results', type: 'page' }
+            { name: 'Flight Results', type: 'page', description: 'List of available flights' },
+            { name: 'Hotel Results', type: 'page', description: 'List of available hotels' }
           ]
         },
-        { name: 'Booking Details', type: 'page' },
+        { name: 'Booking Details', type: 'page', description: 'Review booking information' },
         {
           name: 'Payment',
           type: 'decision',
+          description: 'Select payment method',
           children: [
-            { name: 'Credit Card', type: 'action' },
-            { name: 'PayPal', type: 'action' }
+            { name: 'Credit Card', type: 'action', description: 'Enter credit card details' },
+            { name: 'PayPal', type: 'action', description: 'Pay via PayPal' }
           ]
         },
-        { name: 'Confirmation', type: 'page' },
-        { name: 'My Trips', type: 'page', linkType: 'related' },
-        { name: 'Support', type: 'page' }
+        { name: 'Confirmation', type: 'page', description: 'Booking confirmation and receipt' },
+        { name: 'My Trips', type: 'page', linkType: 'related', description: 'Manage upcoming and past trips' },
+        { name: 'Support', type: 'page', description: 'Customer support and FAQs' }
       ]
     }
   }), []);
@@ -593,8 +864,8 @@ function IAFlowchart() {
     }
   }, []);
 
-  const generateIA = useCallback(() => {
-    const keyword = inputText.trim().toLowerCase();
+  const generateIA = useCallback((keywordParam) => {
+    const keyword = (keywordParam || '').trim().toLowerCase();
     if (!keyword) {
       setError('Please enter a keyword');
       return;
@@ -619,7 +890,7 @@ function IAFlowchart() {
     } finally {
       setLoading(false);
     }
-  }, [inputText, templates, genericTemplate, fitToScreen]);
+  }, [templates, genericTemplate, fitToScreen]);
 
   useEffect(() => {
     fetchData();
@@ -658,7 +929,7 @@ function IAFlowchart() {
       .attr('xoverflow', 'visible')
       .append('path')
       .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
-      .attr('fill', '#6b7280')
+      .attr('fill', '#4b5563') // darker gray for better contrast
       .attr('stroke', 'none');
 
     // Soft shadow
@@ -673,7 +944,7 @@ function IAFlowchart() {
       .attr('dx', 1)
       .attr('dy', 1)
       .attr('stdDeviation', 3)
-      .attr('flood-color', 'rgba(0,0,0,0.2)');
+      .attr('flood-color', 'rgba(0,0,0,0.15)');
 
     // Glow for hover
     const glowFilter = defs.append('filter')
@@ -695,8 +966,8 @@ function IAFlowchart() {
       .attr('result', 'offsetBlur');
 
     glowFilter.append('feFlood')
-      .attr('flood-color', '#3b82f6')
-      .attr('flood-opacity', '0.8')
+      .attr('flood-color', '#2563eb') // blue glow for hover
+      .attr('flood-opacity', '0.9')
       .attr('result', 'glowColor');
 
     glowFilter.append('feComposite')
@@ -716,9 +987,9 @@ function IAFlowchart() {
       .attr('class', 'link')
       .attr('fill', 'none')
       .attr('marker-end', 'url(#arrowhead)')
-      .attr('stroke', '#9ca3af')
-      .attr('stroke-width', 2.5)
-      .attr('stroke-dasharray', d => d.type === 'related' ? '5,5' : 'none')
+      .attr('stroke', '#6b7280') // darker gray for better visibility
+      .attr('stroke-width', 3)
+      .attr('stroke-dasharray', d => d.type === 'related' ? '6,6' : 'none')
       .attr('d', linkArc)
       .style('transition', 'stroke 0.3s ease, stroke-width 0.3s ease');
 
@@ -727,16 +998,17 @@ function IAFlowchart() {
       .data(graphData.links)
       .enter().append('text')
       .attr('class', 'link-label')
-      .attr('font-size', 12)
-      .attr('fill', '#6b7280')
+      .attr('font-size', 14)
+      .attr('fill', '#374151') // dark gray for better readability
+      .attr('font-weight', '600')
       .attr('text-anchor', 'middle')
       .attr('dominant-baseline', 'middle')
       .attr('x', d => (d.source.x + d.target.x) / 2)
-      .attr('y', d => Math.min(d.source.y, d.target.y) - 15)
+      .attr('y', d => Math.min(d.source.y, d.target.y) - 20)
       .style('pointer-events', 'none')
       .text(d => d.label || '')
       .style('display', d => d.label ? 'block' : 'none')
-      .style('text-shadow', '1px 1px 2px rgba(255,255,255,0.8)');
+      .style('text-shadow', 'none');
 
     // Nodes with animations, hover glow
     const node = g.selectAll('.node')
@@ -972,7 +1244,7 @@ function IAFlowchart() {
             {/* Replace text input with dropdown for keyword selection */}
             <select
               value={inputText}
-              onChange={(e) => { setInputText(e.target.value); if (e.target.value) generateIA(); }}
+              onChange={(e) => { setInputText(e.target.value); if (e.target.value) generateIA(e.target.value); }}
               disabled={loading}
               className="w-64 px-3 py-2 border border-gray-300 rounded focus:border-blue-500 focus:outline-none text-sm placeholder-gray-500"
             >
