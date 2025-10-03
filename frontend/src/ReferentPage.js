@@ -4,7 +4,8 @@ import popularIaLinks from './popularIaLinks.json';
 function ReferentPage() {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  // Removed unused error state and setError calls to fix unused variable warning
+  // const [error, setError] = useState('');
 
   useEffect(() => {
     fetchDocuments();
@@ -17,10 +18,10 @@ function ReferentPage() {
         const data = await response.json();
         setDocuments(data.documents || []);
       } else {
-        setError('Failed to fetch IA documents.');
+        // setError('Failed to fetch IA documents.');
       }
     } catch (err) {
-      setError('Error fetching IA documents.');
+      // setError('Error fetching IA documents.');
     } finally {
       setLoading(false);
     }
@@ -37,8 +38,7 @@ function ReferentPage() {
         </div>
       </div>
       {loading && <p className="p-2 text-blue-500 text-center">Loading...</p>}
-      {/* Removed error message display as per user request */}
-      {/* {error && <div className="p-3 mb-4 text-sm text-red-700 bg-red-100 rounded border border-red-400 text-center" role="alert">{error}</div>} */}
+      {/* Removed error message display */}
       <div className="flex-1 p-4">
         <div className="bg-white shadow-lg rounded-lg p-6">
           {documents.length === 0 ? (

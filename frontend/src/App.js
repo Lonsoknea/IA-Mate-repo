@@ -38,7 +38,7 @@ function App() {
 
   useEffect(() => {
     // Load conversations from DB on mount
-    fetch('http://localhost:3003/conversations')
+    fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003'}/conversations`)
       .then(res => res.json())
       .then(data => setConversation(data.messages || []))
       .catch(err => console.error('Failed to load conversations', err));
@@ -1016,7 +1016,7 @@ function App() {
                   setError('');
                   // Add user message to conversation (append to bottom)
                   setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
-                  fetch('http://localhost:3003/ai', {
+                  fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003'}/ai`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: aiPrompt }),
@@ -1052,23 +1052,23 @@ function App() {
                 // Add user message to conversation (append to bottom)
                 setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
                 try {
-                  const response = await fetch('http://localhost:3003/ai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: aiPrompt }),
-                  });
-                  if (!response.ok) {
-                    throw new Error('Failed to get AI response');
-                  }
-                  const data = await response.json();
-                  // Add AI response to conversation (append to bottom)
-                  setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
-                  setAiPrompt(''); // Clear input after sending
-                } catch (err) {
-                  setError('Error fetching AI response.');
-                } finally {
-                  setAiLoading(false);
+                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'http://localhost:3003'}/ai`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ prompt: aiPrompt }),
+                });
+                if (!response.ok) {
+                  throw new Error('Failed to get AI response');
                 }
+                const data = await response.json();
+                // Add AI response to conversation (append to bottom)
+                setConversation(prev => [...prev, { sender: 'ai', message: data.response }]);
+                setAiPrompt(''); // Clear input after sending
+              } catch (err) {
+                setError('Error fetching AI response.');
+              } finally {
+                setAiLoading(false);
+              }
               }}
               disabled={aiLoading}
               className="p-3 text-gray-600 rounded-r hover:bg-gray-200 disabled:opacity-50 flex items-center justify-center"

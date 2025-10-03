@@ -28,7 +28,7 @@ services:
           type: web
           name: ia-backend
           property: host
-  - type: pserv
+  - type: managed
     name: ia-mongodb
-    runtime: mongodb
-    ipAllowList: []  # only accessible from other services
+    databaseName: ia-mongodb
+    plan: free
