@@ -85,13 +85,13 @@ function HomePage() {
               </p>
             </div>
             <div
-              onClick={() => window.location.href = '/app'}
+              onClick={() => window.location.href = '/referent'}
               className="cursor-pointer bg-white rounded-xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-200"
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  window.location.href = '/app';
+                  window.location.href = '/referent';
                 }
               }}
             >
@@ -100,9 +100,9 @@ function HomePage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">JSON Upload</h3>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Referent Document</h3>
               <p className="text-gray-600">
-                Import your own JSON data to visualize custom information architectures and flowcharts.
+                This section stores the document you provided as a reference for building the information architecture.
               </p>
             </div>
             <div

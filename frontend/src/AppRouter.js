@@ -4,6 +4,7 @@ import HomePage from './HomePage';
 import IAFlowchart from './IAFlowchart';
 import Login from './Login';
 import Profile from './Profile';
+import ReferentPage from './ReferentPage';
 
 function ProtectedRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -18,6 +19,7 @@ function AppRouter() {
         <Route path="/login" element={<Login />} />
         <Route path="/app" element={<ProtectedRoute><IAFlowchart /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+        <Route path="/referent" element={<ProtectedRoute><ReferentPage /></ProtectedRoute>} />
       </Routes>
     </Router>
   );

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import * as d3 from 'd3';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 function IAFlowchart() {
+  const navigate = useNavigate();
   const [iaData, setIaData] = useState(null);
   const [graphData, setGraphData] = useState({ nodes: [], links: [] });
   const [snapToGrid, setSnapToGrid] = useState(false);
@@ -311,29 +312,30 @@ function IAFlowchart() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  // Removed JSON upload feature, replaced with Referent feature placeholder
+  // const handleFileUpload = async (event) => {
+  //   const file = event.target.files[0];
+  //   if (!file) return;
 
-    if (!file.name.endsWith('.json')) {
-      setError('Please select a JSON file.');
-      return;
-    }
+  //   if (!file.name.endsWith('.json')) {
+  //     setError('Please select a JSON file.');
+  //     return;
+  //   }
 
-    setLoading(true);
-    setError('');
+  //   setLoading(true);
+  //   setError('');
 
-    try {
-      const text = await file.text();
-      const jsonData = JSON.parse(text);
-      setIaData(jsonData);
-      setError('');
-    } catch (err) {
-      setError('Invalid JSON file.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  //   try {
+  //     const text = await file.text();
+  //     const jsonData = JSON.parse(text);
+  //     setIaData(jsonData);
+  //     setError('');
+  //   } catch (err) {
+  //     setError('Invalid JSON file.');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   useEffect(() => {
     if (iaData) {
@@ -807,15 +809,16 @@ function IAFlowchart() {
               disabled={loading}
               className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
             >
-              Generate from Keyword
+              Generate 
             </button>
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleFileUpload}
+            {/* Referent feature */}
+            <button
+              onClick={() => navigate('/referent')}
               disabled={loading}
-              className="file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
+            >
+              Referent
+            </button>
           </div>
         </div>
       </div>
