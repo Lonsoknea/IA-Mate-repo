@@ -11,7 +11,8 @@ function Profile() {
     password: '',
     phone: '',
   });
-  const [showPassword, setShowPassword] = useState(false);
+  // Removed unused showPassword and setShowPassword to fix unused variable warning
+  // const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {

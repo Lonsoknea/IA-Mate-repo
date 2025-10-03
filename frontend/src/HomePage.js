@@ -156,16 +156,16 @@ function HomePage() {
             Transform your ideas into visual masterpieces.
           </p>
           <div className="flex justify-center space-x-6">
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+            <a href="/about" className="text-gray-400 hover:text-white transition-colors">
               About
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+            <a href="/privacy" className="text-gray-400 hover:text-white transition-colors">
               Privacy
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+            <a href="/terms" className="text-gray-400 hover:text-white transition-colors">
               Terms
             </a>
-            <a href="#" className="text-gray-400 hover:text-white transition-colors">
+            <a href="/contact" className="text-gray-400 hover:text-white transition-colors">
               Contact
             </a>
           </div>
