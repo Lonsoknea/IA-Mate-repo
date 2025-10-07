@@ -251,10 +251,6 @@ app.delete('/user/profile-picture', authenticateToken, (req, res) => {
   }
 });
 
-app.listen("/",(req,res)=>{
-  res.send("back end working")
-})
-
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
