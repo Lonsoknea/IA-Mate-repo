@@ -205,7 +205,7 @@ app.put('/users/:id', authenticateToken, (req, res) => {
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 
-const PORT = 3003;
+const PORT = process.env.PORT || 3003;
 
 app.post('/user/profile-picture', authenticateToken, upload.single('picture'), (req, res) => {
   try {
