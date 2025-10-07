@@ -18,7 +18,7 @@ function Login() {
     const endpoint = isRegister ? '/register' : '/login';
     const body = isRegister ? { email, password, name, username, phone } : { email, password };
     try {
-      const response = await fetch(`http://localhost:3003${endpoint}`, {
+      const response = await fetch(`https://ia-mate-repo.onrender.com${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
