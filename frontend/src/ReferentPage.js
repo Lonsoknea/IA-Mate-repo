@@ -13,7 +13,7 @@ function ReferentPage() {
 
   const fetchDocuments = async () => {
     try {
-      const response = await fetch('https://ia-mate-repo.onrender.com/ia-documents');
+      const response = await fetch('https://ia-mate-repo-y4ob.onrender.com/ia-documents');
       if (response.ok) {
         const data = await response.json();
         setDocuments(data.documents || []);

@@ -25,7 +25,7 @@ function Profile() {
       const payload = JSON.parse(atob(token.split('.')[1]));
       setUser({ id: payload.id, email: payload.email });
       // Fetch full user profile data from backend
-      fetch(`https://ia-mate-repo.onrender.com/users/${payload.id}`)
+      fetch(`https://ia-mate-repo-y4ob.onrender.com/users/${payload.id}`)
         .then((res) => res.json())
         .then((data) => {
           setFormData({
@@ -58,7 +58,7 @@ function Profile() {
       return;
     }
     try {
-      await fetch('https://ia-mate-repo.onrender.com/logout', {
+      await fetch('https://ia-mate-repo-y4ob.onrender.com/logout', {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -81,7 +81,7 @@ function Profile() {
       return;
     }
     try {
-      const response = await fetch(`https://ia-mate-repo.onrender.com/users/${user.id}`, {
+      const response = await fetch(`https://ia-mate-repo-y4ob.onrender.com/users/${user.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

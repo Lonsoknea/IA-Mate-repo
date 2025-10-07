@@ -731,7 +731,7 @@ function IAFlowchart() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('https://ia-mate-repo.onrender.com/ia');
+      const response = await fetch('https://ia-mate-repo-y4ob.onrender.com/ia');
       if (response.ok) {
         const data = await response.json();
         setIaData(data);

@@ -38,7 +38,7 @@ function App() {
 
   useEffect(() => {
     // Load conversations from DB on mount
-    fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo.onrender.com'}/conversations`)
+    fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo-y4ob.onrender.com'}/conversations`)
       .then(res => res.json())
       .then(data => setConversation(data.messages || []))
       .catch(err => console.error('Failed to load conversations', err));
@@ -344,7 +344,7 @@ function App() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('https://ia-mate-repo.onrender.com/ia');
+      const response = await fetch('https://ia-mate-repo-y4ob.onrender.com/ia');
       if (response.ok) {
         const data = await response.json();
         setIaData(data);
@@ -1016,7 +1016,7 @@ function App() {
                   setError('');
                   // Add user message to conversation (append to bottom)
                   setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
-                  fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo.onrender.com'}/ai`, {
+                  fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo-y4ob.onrender.com'}/ai`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ prompt: aiPrompt }),
@@ -1052,7 +1052,7 @@ function App() {
                 // Add user message to conversation (append to bottom)
                 setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
                 try {
-                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo.onrender.com'}/ai`, {
+                const response = await fetch(`${process.env.REACT_APP_API_BASE_URL || 'https://ia-mate-repo-y4ob.onrender.com'}/ai`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ prompt: aiPrompt }),

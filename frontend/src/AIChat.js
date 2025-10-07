@@ -17,7 +17,7 @@ function AIChat() {
 
   useEffect(() => {
     // Load conversations from DB on mount
-    fetch('https://ia-mate-repo.onrender.com/conversations')
+    fetch('https://ia-mate-repo-y4ob.onrender.com/conversations')
       .then(res => res.json())
       .then(data => setConversation(data.messages || []))
       .catch(err => console.error('Failed to load conversations', err));
@@ -162,7 +162,7 @@ function AIChat() {
                 setError('');
                 // Add user message to conversation (append to bottom)
                 setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
-                fetch('https://ia-mate-repo.onrender.com/ai', {
+                fetch('https://ia-mate-repo-y4ob.onrender.com/ai', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ prompt: aiPrompt }),
@@ -198,7 +198,7 @@ function AIChat() {
               // Add user message to conversation (append to bottom)
               setConversation(prev => [...prev, { sender: 'user', message: aiPrompt }]);
               try {
-                const response = await fetch('https://ia-mate-repo.onrender.com/ai', {
+                const response = await fetch('https://ia-mate-repo-y4ob.onrender.com/ai', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({ prompt: aiPrompt }),
