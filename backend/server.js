@@ -8,7 +8,7 @@ const path = require('path');
 
 const app = express();
 app.use(cors({
-  origin: 'https://ia-mate-repo.onrender.com',
+  origin: 'https://ia-mate-repo-y4ob.onrender.com',
   credentials: true
 }));
 app.use(express.json());
