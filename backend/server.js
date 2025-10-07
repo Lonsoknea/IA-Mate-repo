@@ -18,13 +18,24 @@ app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Use environment variable
-const USERS_FILE = path.join(__dirname, 'users.json');
 
 // Connect to MongoDB
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ia-mate';
 mongoose.connect(MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => console.error('MongoDB connection error:', err));
+
+// Define schema for User (authentication and profile)
+const UserSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  name: { type: String },
+  username: { type: String },
+  phone: { type: String },
+  picture: { type: String }
+});
+
+const User = mongoose.model('User', UserSchema);
 
 // Define schema for IA data
 const IaDataSchema = new mongoose.Schema({
@@ -105,19 +116,6 @@ app.post('/ai', async (req, res) => {
   }
 });
 
-// Helper functions for user management
-const readUsers = () => {
-  try {
-    const data = fs.readFileSync(USERS_FILE, 'utf8');
-    return JSON.parse(data);
-  } catch (err) {
-    return [];
-  }
-};
-
-const writeUsers = (users) => {
-  fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
-};
 
 // Middleware to verify JWT
 const authenticateToken = (req, res, next) => {
@@ -139,19 +137,29 @@ app.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Email and password required' });
   }
 
-  const users = readUsers();
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
-    return res.status(400).json({ error: 'User already exists' });
+  try {
+    // Check for existing user in MongoDB
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User already exists' });
+    }
+    // Hash password and create user in MongoDB
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = new User({
+      email,
+      password: hashedPassword,
+      name: name || '',
+      username: username || '',
+      phone: phone || '',
+      picture: ''
+    });
+    await newUser.save();
+    const token = jwt.sign({ id: newUser._id, email: newUser.email, name: newUser.name, username: newUser.username, phone: newUser.phone }, JWT_SECRET);
+    res.json({ token });
+  } catch (error) {
+    console.error('Error registering user:', error);
+    res.status(500).json({ error: 'Failed to register user' });
   }
-
-  const hashedPassword = await bcrypt.hash(password, 10);
-  const newUser = { id: Date.now(), email, password: hashedPassword, name: name || '', username: username || '', phone: phone || '', picture: '' };
-  users.push(newUser);
-  writeUsers(users);
-
-  const token = jwt.sign({ id: newUser.id, email: newUser.email, name: newUser.name, username: newUser.username, phone: newUser.phone }, JWT_SECRET);
-  res.json({ token });
 });
 
 app.post('/login', async (req, res) => {
@@ -159,15 +167,17 @@ app.post('/login', async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
-
-  const users = readUsers();
-  const user = users.find(u => u.email === email);
-  if (!user || !(await bcrypt.compare(password, user.password))) {
-    return res.status(401).json({ error: 'Invalid credentials' });
+  try {
+    const user = await User.findOne({ email });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
+    const token = jwt.sign({ id: user._id, email: user.email }, JWT_SECRET);
+    res.json({ token });
+  } catch (error) {
+    console.error('Error logging in:', error);
+    res.status(500).json({ error: 'Failed to login' });
   }
-
-  const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET);
-  res.json({ token });
 });
 
 app.post('/logout', authenticateToken, (req, res) => {
@@ -175,35 +185,39 @@ app.post('/logout', authenticateToken, (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });
 
-app.get('/users/:id', authenticateToken, (req, res) => {
-  const userId = parseInt(req.params.id);
-  if (req.user.id !== userId) {
+app.get('/users/:id', authenticateToken, async (req, res) => {
+  const userId = req.params.id;
+  if (req.user.id !== userId && req.user._id !== userId) {
     return res.status(403).json({ error: 'Access denied' });
   }
-  const users = readUsers();
-  const user = users.find(u => u.id === userId);
-  if (!user) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    const user = await User.findById(userId).select('-password');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json(user);
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
-  res.json(user);
 });
 
-app.put('/users/:id', authenticateToken, (req, res) => {
-  const userId = parseInt(req.params.id);
-  if (req.user.id !== userId) {
+app.put('/users/:id', authenticateToken, async (req, res) => {
+  const userId = req.params.id;
+  if (req.user.id !== userId && req.user._id !== userId) {
     return res.status(403).json({ error: 'Access denied' });
   }
   const { name, username, phone } = req.body;
-  const users = readUsers();
-  const userIndex = users.findIndex(u => u.id === userId);
-  if (userIndex === -1) {
-    return res.status(404).json({ error: 'User not found' });
+  try {
+    const updated = await User.findByIdAndUpdate(userId, { name, username, phone }, { new: true });
+    if (!updated) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
   }
-  users[userIndex].name = name || users[userIndex].name;
-  users[userIndex].username = username || users[userIndex].username;
-  users[userIndex].phone = phone || users[userIndex].phone;
-  writeUsers(users);
-  res.json({ message: 'User updated successfully' });
 });
 
 // Removed OAuth routes as per user request
