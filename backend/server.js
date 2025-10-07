@@ -10,7 +10,6 @@ const app = express();
 app.use(cors({
   origin: [
     'https://ia-mate-repo-y4ob.onrender.com',
-    'https://ia-mate-repo-server-x6bh.onrender.com'
   ],
   credentials: true
 }));
